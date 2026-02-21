@@ -203,61 +203,79 @@ class BackgroundProcessor:
             document.ocr_text = ocr_text
 
             # ============================================
-            # STEP 4: CONCURRENT PROCESSING (PARALLEL EXECUTION)
-            # Run 3 operations simultaneously to save time:
-            # 1. Document Classification
-            # 2. Signature Detection
-            # 3. Metadata Extraction
+            # STEP 4: CLASSIFICATION (Must run first to determine document type)
             # ============================================
-            logger.info(f"⚡ [AI AGENT] Starting concurrent processing (3 operations in parallel)...")
-            concurrent_start = time.time()
+            logger.info(f"🎯 [AI AGENT] Step 1: Running document classification...")
+            classification_start = time.time()
 
-            # Create thread pool for concurrent execution
-            with ThreadPoolExecutor(max_workers=3) as executor:
-                # Submit all 3 tasks simultaneously
-                future_classification = executor.submit(
-                    self._classify_document_safe,
-                    document.id,
-                    gemini_result
-                )
+            classification_result = self._classify_document_safe(document.id, gemini_result)
 
-                future_signatures = executor.submit(
-                    self._update_signature_from_gemini_safe,
-                    document.id,
-                    gemini_result
-                )
+            if classification_result.get('error'):
+                logger.error(f"   ❌ Classification failed: {classification_result['error']}")
+            else:
+                logger.info(f"   ✅ Classification completed: {classification_result.get('doc_type', 'Unknown')} "
+                           f"(Confidence: {classification_result.get('confidence', 0):.1%})")
 
-                future_metadata = executor.submit(
-                    self._update_metadata_from_gemini_safe,
-                    document.id,
-                    gemini_result
-                )
+            classification_time = time.time() - classification_start
 
-                # Wait for all tasks to complete and collect results
-                futures = {
-                    'classification': future_classification,
-                    'signatures': future_signatures,
-                    'metadata': future_metadata
-                }
+            # Refresh document to get updated document_type
+            db.refresh(document)
 
-                results = {}
-                for task_name, future in futures.items():
-                    try:
-                        results[task_name] = future.result(timeout=30)  # 30 second timeout per task
-                        logger.info(f"   ✅ {task_name.title()} completed")
-                    except Exception as e:
-                        logger.error(f"   ❌ {task_name.title()} failed: {e}")
-                        results[task_name] = {"error": str(e)}
+            # ============================================
+            # STEP 5: CONDITIONAL SIGNATURE DETECTION (Only for Bill of Lading)
+            # ============================================
+            signature_result = {"skipped": True}
+            signature_time = 0
 
-            concurrent_time = time.time() - concurrent_start
-            logger.info(f"✅ [AI AGENT] Concurrent processing complete in {concurrent_time:.2f}s")
-            logger.info(f"   💡 Time saved vs sequential: ~{(3 * concurrent_time - concurrent_time) / concurrent_time:.0%}")
+            if document.document_type == DocumentType.BILL_OF_LADING:
+                logger.info(f"✍️  [SIGNATURE DETECTION] Document type is Bill of Lading - Running signature detection...")
+                logger.info(f"   📌 Analyzing document for handwritten signatures...")
+                signature_start = time.time()
+
+                signature_result = self._update_signature_from_gemini_safe(document.id, gemini_result)
+
+                signature_time = time.time() - signature_start
+
+                if signature_result.get('error'):
+                    logger.error(f"   ❌ Signature detection failed: {signature_result['error']}")
+                else:
+                    sig_count = signature_result.get('signature_count', 0)
+                    logger.info(f"   ✅ Signature detection completed: Found {sig_count} signature(s)")
+                    if sig_count > 0:
+                        logger.info(f"   📝 Signature details updated in database")
+            else:
+                doc_type_name = document.document_type.value if document.document_type else "Unknown"
+                logger.info(f"⏭️  [SIGNATURE DETECTION] Document type is '{doc_type_name}' - Skipping signature detection")
+                logger.info(f"   ℹ️  Signature detection only runs for Bill of Lading documents")
+
+            # ============================================
+            # STEP 6: CONCURRENT METADATA EXTRACTION (Can run in parallel)
+            # ============================================
+            logger.info(f"📋 [AI AGENT] Step 2: Running metadata extraction...")
+            metadata_start = time.time()
+
+            metadata_result = self._update_metadata_from_gemini_safe(document.id, gemini_result)
+
+            metadata_time = time.time() - metadata_start
+
+            if metadata_result.get('error'):
+                logger.error(f"   ❌ Metadata extraction failed: {metadata_result['error']}")
+            else:
+                logger.info(f"   ✅ Metadata extraction completed")
+
+            # Calculate total processing time for these steps
+            total_step_time = classification_time + signature_time + metadata_time
+            logger.info(f"✅ [AI AGENT] Processing steps complete in {total_step_time:.2f}s")
+            logger.info(f"   ├─ Classification: {classification_time:.2f}s")
+            logger.info(f"   ├─ Signature Detection: {signature_time:.2f}s {'(Skipped)' if signature_result.get('skipped') else ''}")
+            logger.info(f"   └─ Metadata Extraction: {metadata_time:.2f}s")
+
 
             # Refresh document from database to get updated fields
             db.refresh(document)
 
             # ============================================
-            # STEP 4.5: DOCUMENT-TYPE SPECIFIC FIELD EXTRACTION
+            # STEP 7: DOCUMENT-TYPE SPECIFIC FIELD EXTRACTION
             # Extract fields based on document type (BOL, POD, Invoice, etc.)
             # ============================================
             logger.info(f"📋 [FIELD EXTRACTION] Extracting document-type specific fields...")
@@ -267,7 +285,7 @@ class BackgroundProcessor:
             db.refresh(document)
 
             # ============================================
-            # STEP 4.6: RULE VALIDATION
+            # STEP 8: RULE VALIDATION
             # Validate document against general and doc-specific rules
             # ============================================
             logger.info(f"✅ [VALIDATION] Running rule validation...")
@@ -286,7 +304,7 @@ class BackgroundProcessor:
                 return
 
             # ============================================
-            # STEP 5: FINALIZE & LEARN
+            # STEP 9: FINALIZE & LEARN
             # ============================================
             document.is_processed = True
             # Validation status already set by _validate_document_rules
