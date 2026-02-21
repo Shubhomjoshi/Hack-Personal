@@ -1,0 +1,52 @@
+﻿# .dockerignore for Azure deployment
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.dylib
+# Git
+.git
+.gitignore
+.github
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+# Environment
+.env
+.env.local
+*.env
+# Database
+*.db
+*.sqlite
+*.sqlite3
+app.db
+# Uploads
+uploads/*
+!uploads/.gitkeep
+# Logs
+*.log
+logs/
+# Documentation
+*.md
+!README.md
+# Testing
+tests/
+test_*.py
+*_test.py
+# Build
+build/
+dist/
+*.egg-info/
+# Deployment
+deploy_*.zip
+Procfile
+runtime.txt
+# OS
+.DS_Store
+Thumbs.db

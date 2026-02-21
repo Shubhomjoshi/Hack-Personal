@@ -92,11 +92,17 @@ class UserLogin(BaseModel):
 
 
 class Token(BaseModel):
-    """JWT Token response"""
+    """JWT Token response with user details"""
     access_token: str
     token_type: str = "bearer"
-    user_id: int
+    # User details
+    id: int
+    email: EmailStr
     username: str
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 class TokenData(BaseModel):

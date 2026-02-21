@@ -91,12 +91,12 @@ def register_user(user: UserRegister, db: Session = Depends(get_db)):
 @router.post("/login", response_model=Token)
 def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     """
-    Login and receive access token
+    Login and receive access token with user details
 
     - **username**: Username
     - **password**: Password
 
-    Returns JWT access token for authentication
+    Returns JWT access token along with complete user information
     """
     # Find user
     user = db.query(User).filter(User.username == user_credentials.username).first()
@@ -133,8 +133,13 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     return Token(
         access_token=access_token,
         token_type="bearer",
-        user_id=user.id,
-        username=user.username
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        is_active=user.is_active,
+        is_admin=user.is_admin,
+        created_at=user.created_at,
+        updated_at=user.updated_at
     )
 
 
@@ -148,6 +153,7 @@ def login_for_access_token(
 
     This endpoint is compatible with OAuth2 password flow.
     Use this for interactive API docs authentication.
+    Returns JWT access token along with complete user information.
     """
     # Find user
     user = db.query(User).filter(User.username == form_data.username).first()
@@ -175,15 +181,23 @@ def login_for_access_token(
     return Token(
         access_token=access_token,
         token_type="bearer",
-        user_id=user.id,
-        username=user.username
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        is_active=user.is_active,
+        is_admin=user.is_admin,
+        created_at=user.created_at,
+        updated_at=user.updated_at
     )
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse, deprecated=True)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
     Get current authenticated user information
+
+    ⚠️ DEPRECATED: User details are now returned in the login response.
+    This endpoint is kept for backward compatibility only.
 
     Requires authentication token
     """

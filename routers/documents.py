@@ -25,101 +25,22 @@ router = APIRouter(
     tags=["Documents"]
 )
 
-# Upload directory
-UPLOAD_DIR = "uploads"
+# Upload directory configuration
+# Azure App Service: Use persistent storage path /home/data
+# Local development: Use current directory
+if os.getenv("ENVIRONMENT") == "production":
+    # Azure persistent storage
+    UPLOAD_DIR = "/home/data/uploads"
+else:
+    # Local development
+    UPLOAD_DIR = "uploads"
+
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+print(f"📁 Upload directory: {UPLOAD_DIR}")
 
 
-@router.post("/upload", response_model=DocumentUploadResponse, status_code=status.HTTP_201_CREATED)
-async def upload_document(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    customer_id: Optional[int] = None,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Upload a document for processing
-
-    - **file**: PDF or image file (JPEG, PNG)
-    - **customer_id**: Customer ID for customer-specific validation rules (optional)
-
-    The document will be saved immediately and processed in the background.
-    OCR engine will extract text, check quality, and update status.
-    """
-    # Validate file type
-    allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff']
-    file_ext = os.path.splitext(file.filename)[1].lower()
-
-    if file_ext not in allowed_extensions:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File type not supported. Allowed types: {', '.join(allowed_extensions)}"
-        )
-
-    # Generate unique filename
-    unique_filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
-
-    # Save file
-    try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Could not save file: {str(e)}"
-        )
-
-    # Get file size
-    file_size = os.path.getsize(file_path)
-
-    # Create document record in database
-    document = Document(
-        filename=unique_filename,
-        original_filename=file.filename,
-        file_path=file_path,
-        file_size=file_size,
-        file_type=file_ext.replace('.', ''),
-        uploaded_by=current_user.id,
-        customer_id=customer_id,
-        is_processed=False,
-        validation_status=ValidationStatus.PENDING
-    )
-
-    db.add(document)
-    db.commit()
-    db.refresh(document)
-
-    # Start background processing (OCR + Quality Check)
-    def process_in_background(doc_id: int):
-        from database import SessionLocal
-        from services.background_processor import background_processor
-
-        db_session = SessionLocal()
-        try:
-            background_processor.process_document_async(doc_id, db_session)
-        except Exception as e:
-            import logging
-            logging.error(f"Background processing failed: {e}")
-        finally:
-            db_session.close()
-
-    background_tasks.add_task(process_in_background, document.id)
-
-    return DocumentUploadResponse(
-        document_id=document.id,
-        filename=unique_filename,
-        file_size=file_size,
-        message="Uploaded Successfully",
-        web_status="Sent to Imaging",
-        mob_status="Uploaded Successfully - Verification Pending",
-        processing_started=True
-    )
-
-
-@router.post("/upload-multiple", response_model=List[DocumentUploadResponse])
-async def upload_multiple_documents(
+@router.post("/upload", response_model=List[DocumentUploadResponse], status_code=status.HTTP_201_CREATED)
+async def upload_documents(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
     customer_id: Optional[int] = None,
@@ -127,17 +48,32 @@ async def upload_multiple_documents(
     db: Session = Depends(get_db)
 ):
     """
-    Upload multiple documents at once
+    Upload one or more documents for processing (Unified endpoint)
 
-    - **files**: List of PDF or image files
+    - **files**: Single file or list of PDF/image files (JPEG, PNG, TIFF)
     - **customer_id**: Customer ID for customer-specific validation rules (optional)
+
+    **Usage Examples:**
+    - Single file: Send one file in the 'files' field
+    - Multiple files: Send multiple files in the 'files' field
+
+    The documents will be saved immediately and processed in the background.
+    OCR engine will extract text, check quality, detect signatures, classify documents, and validate rules.
+
+    **Response:** Returns a list of upload results (even for single file upload)
     """
+    if not files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No files provided"
+        )
+
     results = []
+    allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff']
 
     for file in files:
         try:
             # Validate file type
-            allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff']
             file_ext = os.path.splitext(file.filename)[1].lower()
 
             if file_ext not in allowed_extensions:
@@ -145,7 +81,9 @@ async def upload_multiple_documents(
                     document_id=0,
                     filename=file.filename,
                     file_size=0,
-                    message=f"File type not supported: {file_ext}",
+                    message=f"File type not supported: {file_ext}. Allowed: {', '.join(allowed_extensions)}",
+                    web_status="Upload Failed",
+                    mob_status="File type not supported",
                     processing_started=False
                 ))
                 continue
@@ -155,12 +93,25 @@ async def upload_multiple_documents(
             file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
             # Save file
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
+            try:
+                with open(file_path, "wb") as buffer:
+                    shutil.copyfileobj(file.file, buffer)
+            except Exception as e:
+                results.append(DocumentUploadResponse(
+                    document_id=0,
+                    filename=file.filename,
+                    file_size=0,
+                    message=f"Could not save file: {str(e)}",
+                    web_status="Upload Failed",
+                    mob_status="File save error",
+                    processing_started=False
+                ))
+                continue
 
+            # Get file size
             file_size = os.path.getsize(file_path)
 
-            # Create document record
+            # Create document record in database
             document = Document(
                 filename=unique_filename,
                 original_filename=file.filename,
@@ -169,30 +120,48 @@ async def upload_multiple_documents(
                 file_type=file_ext.replace('.', ''),
                 uploaded_by=current_user.id,
                 customer_id=customer_id,
-                is_processed=False
+                is_processed=False,
+                validation_status=ValidationStatus.PENDING
             )
 
             db.add(document)
             db.commit()
             db.refresh(document)
 
-            # Process in background
-            background_tasks.add_task(processing_service.process_document, document, db)
+            # Start background processing (OCR + Quality Check + Classification + Validation)
+            def process_in_background(doc_id: int):
+                from database import SessionLocal
+                from services.background_processor import background_processor
+
+                db_session = SessionLocal()
+                try:
+                    background_processor.process_document_async(doc_id, db_session)
+                except Exception as e:
+                    import logging
+                    logging.error(f"Background processing failed for document {doc_id}: {e}")
+                finally:
+                    db_session.close()
+
+            background_tasks.add_task(process_in_background, document.id)
 
             results.append(DocumentUploadResponse(
                 document_id=document.id,
                 filename=unique_filename,
                 file_size=file_size,
-                message="Uploaded successfully",
+                message="Uploaded Successfully",
+                web_status="Sent to Imaging",
+                mob_status="Uploaded Successfully - Verification Pending",
                 processing_started=True
             ))
 
         except Exception as e:
             results.append(DocumentUploadResponse(
                 document_id=0,
-                filename=file.filename,
+                filename=file.filename if file else "unknown",
                 file_size=0,
                 message=f"Upload failed: {str(e)}",
+                web_status="Upload Failed",
+                mob_status="Error occurred",
                 processing_started=False
             ))
 

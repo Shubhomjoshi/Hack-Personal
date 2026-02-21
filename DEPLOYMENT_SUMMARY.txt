@@ -1,0 +1,130 @@
+﻿========================================
+✅ AZURE DEPLOYMENT - COMPLETE SOLUTION
+========================================
+YOUR APP: hackathon-billing-d0gtggfzeacfgefm.centralindia-01.azurewebsites.net
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔥 PROBLEM FIXED: 409 Conflict Error
+Root causes:
+  ❌ Deployment lock - concurrent deployments
+  ❌ Incorrect startup command
+  ❌ Missing persistent storage configuration
+  ❌ Database not using persistent path
+✅ SOLUTION APPLIED:
+  ✓ GitHub Actions workflow stops app before deploy
+  ✓ Correct Procfile with proper startup command
+  ✓ Database uses /home/data/app.db (persistent)
+  ✓ Uploads use /home/data/uploads (persistent)
+  ✓ Proper worker configuration (2 workers)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 FILES CREATED/UPDATED:
+  ✅ Procfile
+     → Correct gunicorn startup command
+  ✅ runtime.txt
+     → Python 3.10.13
+  ✅ .github/workflows/azure-deploy.yml
+     → Automated deployment with lock handling
+  ✅ database.py
+     → Uses /home/data/app.db for production
+  ✅ routers/documents.py
+     → Uses /home/data/uploads for production
+  ✅ AZURE_DEPLOYMENT_FIXED.md
+     → Complete step-by-step guide (main reference)
+  ✅ AZURE_CHECKLIST.md
+     → Quick checklist for deployment
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 DEPLOYMENT ARCHITECTURE:
+  Database:     SQLite (/home/data/app.db)
+  Uploads:      Local filesystem (/home/data/uploads)
+  Server:       Gunicorn + Uvicorn workers
+  Workers:      2 workers (Azure B1 tier)
+  Timeout:      300 seconds
+  Platform:     Azure App Service (Linux, Python 3.10)
+  Deployment:   GitHub Actions (automated)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 DEPLOYMENT STEPS:
+STEP 1: Configure Azure (Azure Portal)
+  □ Go to: portal.azure.com
+  □ Find: hackathon-billing-d0gtggfzeacfgefm
+  □ Configuration → Startup Command:
+    gunicorn -w 2 -k uvicorn.workers.UvicornWorker main:app --bind=0.0.0.0:8000 --timeout 300 --access-logfile '-' --error-logfile '-'
+  □ Configuration → Application Settings:
+    • ENVIRONMENT = production
+    • GEMINI_API_KEY = AIzaSyDkYkUeAK9--PAvwCu184VoAA4uDAxVQbw
+    • JWT_SECRET_KEY = your-secret-key
+    • WEBSITES_PORT = 8000
+    • SCM_DO_BUILD_DURING_DEPLOYMENT = true
+    • WEBSITES_ENABLE_APP_SERVICE_STORAGE = true
+  □ Click SAVE
+STEP 2: Configure GitHub Secrets
+  □ GitHub repo → Settings → Secrets and variables → Actions
+  □ Add: AZURE_WEBAPP_PUBLISH_PROFILE
+     (Download from Azure Portal → publish profile)
+  □ Add: AZURE_RESOURCE_GROUP
+     (Your resource group name)
+STEP 3: Deploy
+  □ Commit your changes:
+    git add .
+    git commit -m ""Deploy to Azure with fixes""
+    git push origin main
+  □ Monitor: GitHub → Actions tab
+STEP 4: Initialize Database (First time only)
+  □ SSH: az webapp ssh --name hackathon-billing-d0gtggfzeacfgefm --resource-group YOUR_RG
+  □ Run: cd /home/site/wwwroot && python init_database.py
+STEP 5: Verify
+  □ Test: https://hackathon-billing-d0gtggfzeacfgefm.centralindia-01.azurewebsites.net/
+  □ Docs: https://hackathon-billing-d0gtggfzeacfgefm.centralindia-01.azurewebsites.net/docs
+  □ Health: https://hackathon-billing-d0gtggfzeacfgefm.centralindia-01.azurewebsites.net/health
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 IF 409 ERROR OCCURS AGAIN:
+Quick Fix:
+  1. Stop app: az webapp stop --name hackathon-billing-d0gtggfzeacfgefm --resource-group YOUR_RG
+  2. Wait 30 seconds
+  3. Re-run GitHub Actions workflow
+  4. Start app: az webapp start --name hackathon-billing-d0gtggfzeacfgefm --resource-group YOUR_RG
+Note: GitHub Actions workflow now handles this automatically!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 DOCUMENTATION:
+  Main Guide:     AZURE_DEPLOYMENT_FIXED.md (Read this first!)
+  Quick Checklist: AZURE_CHECKLIST.md
+  Startup Command: startup.txt
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ QUICK COMMANDS:
+View logs:
+  az webapp log tail --name hackathon-billing-d0gtggfzeacfgefm --resource-group YOUR_RG
+SSH into app:
+  az webapp ssh --name hackathon-billing-d0gtggfzeacfgefm --resource-group YOUR_RG
+Restart app:
+  az webapp restart --name hackathon-billing-d0gtggfzeacfgefm --resource-group YOUR_RG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ SUCCESS CRITERIA:
+Your deployment is successful when:
+  ✓ https://hackathon-billing-d0gtggfzeacfgefm.centralindia-01.azurewebsites.net/ responds
+  ✓ /health endpoint returns 200 OK
+  ✓ /docs shows Swagger UI
+  ✓ Can register a new user
+  ✓ Can upload a document
+  ✓ No errors in logs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 KEY DIFFERENCES FROM OLD DEPLOYMENT:
+Old (Failed):
+  ❌ No deployment lock handling
+  ❌ Wrong startup command
+  ❌ Ephemeral storage (data lost on restart)
+  ❌ No persistent database path
+New (Fixed):
+  ✅ Automated stop/start in workflow
+  ✅ Correct Procfile with proper command
+  ✅ Persistent storage enabled
+  ✅ Database: /home/data/app.db
+  ✅ Uploads: /home/data/uploads
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📞 NEED HELP?
+1. Read AZURE_DEPLOYMENT_FIXED.md (complete guide)
+2. Check AZURE_CHECKLIST.md (quick steps)
+3. View Azure logs for errors
+4. Check GitHub Actions logs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 STATUS: READY TO DEPLOY!
+Next action: Follow STEP 1 above to configure Azure Portal
+Then: Push to GitHub and deploy automatically!
+========================================
