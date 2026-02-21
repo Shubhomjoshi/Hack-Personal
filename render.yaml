@@ -1,0 +1,18 @@
+﻿# Render.com Deployment Configuration
+services:
+  # FastAPI Web Service
+  - type: web
+    name: document-intelligence-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+    autoDeploy: true

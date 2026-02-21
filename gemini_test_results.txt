@@ -1,0 +1,114 @@
+================================================================================
+GEMINI + EASYOCR TEST RESULTS
+================================================================================
+
+EASYOCR TEXT:
+--------------------------------------------------------------------------------
+Smidhjiela Beratght BiL @E tading Magter @oD' # {Paget gond' {ood' Responsiblu? Non-Negoeiabwe: 4@R '43040.617/402 @Date 186ip #remr '07[27/254 Nebgew TD:: Igea18 fShip Datest SCA@%'  HTRS Sious Falls DClS@ p30905) 246906 07127//25, Pro Number 140' N Weber Ave; 8 Sioux Fallsy SD 57103' S; Casrier: JIRSQ BACi MOTOR INESi #Nc 1 Tar {eel De, Ne 26262: NC 87: Jar Teez NC, 28392 05 Stop: 'BOL#% '86980308 Step} Bor#: 'Stop Bow#: Vcs: Bogia 8g_IPD_8w1 VECS Boti 'Vzcs' eotii [op-sezm# Eron sealt [xoprSezim Customer 2oj NOzdez # potts R4, Net Icrosg) lgomi @ube "rta Wejgbe Ielgnt @d+ 1 Standard StO 6507763348 1360 28 38474000] 741289  z83 @B p389 Smiihiield Foods Jtagheel; NG (IDale Il3 (Ciie 'OitiTin iantmal [Checkniiue; VendorSigatue: 'Diver Sigqabre} TimeGAvaIdAn} OTfisl ~Use Millle [ota1g 1360 28' 38471.{00; Q1289,. wg4 1389 Smitboaa Iazet_weight 19601 Rotal_WE = '432494184/1 MIlCommictcSueat Raght dEaplinSWNMFCNimta3mlapcro Shippig Vmi(est ot tolcd oi thc DiofLouing 'SgiGagVA28,30; commezte?  patietb 00@2 Ieo nthenE96 58E,3G312i55282N884585 KAt 1eage once every eight @oure wile in (tranglty Carster bhall TREI64E9R4CLU7zC76938 88373 lbeck all dor gea1g and' engure Ehe cefrigeretion unlt #8 tenkIL DSreenlaazautoagva cm: bgerattonal and maintaining_the_required_temperatuze jiszmpO1 MUSTmowc olowing aDOTmSndiezuliions  TunabI2 o@c(Escchaduird}noty: S4bjzT ogccuonqioondrionsOTAppIaaultooUdins KUE EnN. ot .84i24o4700tsa Eontgsor ca innediitoy oSchedueddey Tlbunt-_zcou[o 5neor [hoconEiEpr RWIES(EDlWgEulorallcc ze tmtltic Kzaaabe Cotkz Io, Wiina IUginlion Conac- EciotuZdouizie(cgto 8244go8a. deivayorilis hpoGn tilou prnat 0f6aa oduouo[llehuges MEtJIEd ouewiclouel6msudcondiins O[ A1c.0de47o4o tiFPS Ri0r {pund; ChetoR [dzeoieuteefUEtjariodig Tiapop w eeb dtoye _zz; ii ReantoravihondKScl Signed: Britt M welel, Dir 'OE Iransportation Iacontiuor OICotasdrpukzgeueoinmizel,6057u3 E4xp coner' @@iawordc natabzuEesicod hroupbou Nic9nti754EmTz ypstog {8Zo5ifdot @perssionoftha RPpzvy: lccojt9)_8t3 lo cayofaurnpl & 3EgET SddZinoiion: is' 79,4728 buhawisc lodcabo moliacmS,op dhituic[o sddatalid 03327753 3C63%2/ Iatccby certifyhnt tio olloiving dzcntc-mrodict;Wtdehis -erdorthe linecmogcchabzus 16yo[ *aid Rrratyovar @orany Fonlion orstdjoutc 68etin1oi  43424 Rztua ipctredhnupieadbvditS bqumsro ngaty;erntkededntus diethol Hkenrador FEoTaipoLcny HTcEy  icotane@orcdbesidg uut eLt t4EEz mibranded Gnuacj'cfccl hcdncolkacor LorLdigEdwecni ioconst8l witisuch Egzog loni ansedconditons orucunfomDonetStzgmeiori dig_4@rt(QnWmlomfrcght A7iissiton07 4327i7702174242Sth4 9Q 20p40n5ZC9AC5 Tisjlocatlly Luluhc aboiemniimlcikgc decbdinictiyed mrkrd mdlatslcimdl U cbssifcUinor ififtitp plo;Cumia hiicir? ShersLarbzc7aLteInig4ianwa j Zoudllion for bunsponalon n267u6z eardhrina To Regitllon 8  {be Depintmcul @ 7rZp7n Ius idcondionoribe _dbilorkubg inrldpg thozeg Mioti 1572odkrgs3okcc09oog; 36 PPTS ##En8oiCnsita5 570n4i0aoruashpmalZnd U323 6Z51 'arahattyngccdjo Eythc BFpa und aeciRaIoFi pidiis KSi3ns ICieshipmciLooWS 'n #sigbWalsu hekiquis ttaltetagriidig alam  tre #behzi &gr00 3z: 1s84andsde 3ieR-uGCHEGDrcqurad osis10 SI Enthne oca_qodtuhab0gry Ficgut Change Termc((Orph[ ckiGart prpoid @n)ESS markcu ouicrwisc)) phupper Lobl 3nu Cojint: Keapitampriigrs Jaka  Z8ockane8048227 atatulogs Ryidl '@olats JiRatye buppcciourvc Couu;020 degzgeda per C2zzez 8ig2ature Date: Khipper Gignatuzed Date Istop; Stopl VAppt Tme_ DoxJz On tawe2
+
+GEMINI TEXT:
+--------------------------------------------------------------------------------
+Smithfield
+Good food. Responsibly.
+Straight Bill of Lading
+Non-Negotiable
+Master BOL # 4304067402
+Page:
+1 OF 1
+Date
+07/27/25
+Ship From:
+Sioux Falls DC, SD
+1400 N Weber Ave
+Sioux Falls, SD 57103 US
+Vessel ID: H30905
+Seal: 216906
+Ship Date:
+07/27/25
+SCAC: HIRS
+Pro Number:
+Carrier:
+HIRSCHBACH MOTOR LINES INC
+Stop: 1
+Tar Heel DC, NC
+16261 NC 87,
+Tar Heel, NC, 28392
+US
+Stop BOL#: 86980308
+VICS BOL#: BS_TPD_811
+Stop BOL#:
+VICS BOL#:
+Stop BOL#:
+VICS BOL#:
+Stop Seal#
+Stop Seal#
+Stop Seal#
+Stop Customer PO# Order # Units PAL Net Weight Gross Weight UoM Cube Frt. Cd.
+1 Standard STO 6501163348 1360 28 38471.000 41289.184 LB 1389
+Totals 1360 28 38471.000 41289.184 1389
+Pallet Weight = 1960 Total Wt = 43249.184 ()
+Smithfield Foods
+Tar Heel, NC
+Date 7/30/25 Appt Time 10:12
+Check-In Time Dock Time Check-Out Time
+Vendor Signature
+Driver Signature
+*Use Military Time to Avoid Any Confusion*
+Smithfield
+111 Commerce Street
+Smithfield, VA 23430
+IF AT THE TIME OF RECEIPT ANY DISCREPANCY EXISTS CONTACT SMITHFIELD LOGISTICS GROUP, PRIOR TO RELEASING PRODUCT & TRUCK, OR NO CLAIM WILL BE ALLOWED. CALL 888-704-2637 OPTION 3 OR EMAIL LossPrevention@smithfield.com.
+Comments: Pallets OUT
+*At least once every eight hours while in transit, Carrier shall check all door seals and ensure the refrigeration unit is operational and maintaining the required temperature.*
+This shipment MUST move following all D.O.T. rules and regulations. If unable to deliver as scheduled, notify Consignor and Consignee immediately to reschedule delivery.
+Subject to section 7 of conditions of applicable bill of lading. If this shipment is to be delivered to the consignee without recourse on the consignor, the consignor shall sign the following statement: The carrier shall not make delivery of this shipment without payment of freight and all other lawful charges.
+Signed: Britt M. Welch, Dir of Transportation
+We hereby certify that the following described product, which is offered for shipment in commerce, has been U.S. inspected and passed by the U.S. Department of Agriculture, is so marked, and at this date is not adulterated or misbranded.
+This is to certify that the above named materials are properly classified, described, packaged, marked and labeled and are in proper condition for transportation according to the applicable regulations of the Department of Transportation
+If the shipment moves between two ports by a carrier by water, the law requires that the bill of lading shall state whether it is "carrier's or shipper's weight". Where the rate is dependent on value, shipper is required to state specifically in writing the agreed or declared value of the property.
+Shipper Load and Count: [ ] Keep Temperature
+Shipper Load Driver Count: [x] 20 degrees F
+The agreed or declared value of the property is specifically stated by the shipper to be not exceeding $ per
+Carrier Signature: Date:
+Shipper Signature: (O) Date:
+
+COMBINED TEXT:
+--------------------------------------------------------------------------------
+Smidhjiela Beratght BiL @E tading Magter @oD' # {Paget gond' {ood' Responsiblu? Non-Negoeiabwe: 4@R '43040.617/402 @Date 186ip #remr '07[27/254 Nebgew TD:: Igea18 fShip Datest SCA@%'  HTRS Sious Falls DClS@ p30905) 246906 07127//25, Pro Number 140' N Weber Ave; 8 Sioux Fallsy SD 57103' S; Casrier: JIRSQ BACi MOTOR INESi #Nc 1 Tar {eel De, Ne 26262: NC 87: Jar Teez NC, 28392 05 Stop: 'BOL#% '86980308 Step} Bor#: 'Stop Bow#: Vcs: Bogia 8g_IPD_8w1 VECS Boti 'Vzcs' eotii [op-sezm# Eron sealt [xoprSezim Customer 2oj NOzdez # potts R4, Net Icrosg) lgomi @ube "rta Wejgbe Ielgnt @d+ 1 Standard StO 6507763348 1360 28 38474000] 741289  z83 @B p389 Smiihiield Foods Jtagheel; NG (IDale Il3 (Ciie 'OitiTin iantmal [Checkniiue; VendorSigatue: 'Diver Sigqabre} TimeGAvaIdAn} OTfisl ~Use Millle [ota1g 1360 28' 38471.{00; Q1289,. wg4 1389 Smitboaa Iazet_weight 19601 Rotal_WE = '432494184/1 MIlCommictcSueat Raght dEaplinSWNMFCNimta3mlapcro Shippig Vmi(est ot tolcd oi thc DiofLouing 'SgiGagVA28,30; commezte?  patietb 00@2 Ieo nthenE96 58E,3G312i55282N884585 KAt 1eage once every eight @oure wile in (tranglty Carster bhall TREI64E9R4CLU7zC76938 88373 lbeck all dor gea1g and' engure Ehe cefrigeretion unlt #8 tenkIL DSreenlaazautoagva cm: bgerattonal and maintaining_the_required_temperatuze jiszmpO1 MUSTmowc olowing aDOTmSndiezuliions  TunabI2 o@c(Escchaduird}noty: S4bjzT ogccuonqioondrionsOTAppIaaultooUdins KUE EnN. ot .84i24o4700tsa Eontgsor ca innediitoy oSchedueddey Tlbunt-_zcou[o 5neor [hoconEiEpr RWIES(EDlWgEulorallcc ze tmtltic Kzaaabe Cotkz Io, Wiina IUginlion Conac- EciotuZdouizie(cgto 8244go8a. deivayorilis hpoGn tilou prnat 0f6aa oduouo[llehuges MEtJIEd ouewiclouel6msudcondiins O[ A1c.0de47o4o tiFPS Ri0r {pund; ChetoR [dzeoieuteefUEtjariodig Tiapop w eeb dtoye _zz; ii ReantoravihondKScl Signed: Britt M welel, Dir 'OE Iransportation Iacontiuor OICotasdrpukzgeueoinmizel,6057u3 E4xp coner' @@iawordc natabzuEesicod hroupbou Nic9nti754EmTz ypstog {8Zo5ifdot @perssionoftha RPpzvy: lccojt9)_8t3 lo cayofaurnpl & 3EgET SddZinoiion: is' 79,4728 buhawisc lodcabo moliacmS,op dhituic[o sddatalid 03327753 3C63%2/ Iatccby certifyhnt tio olloiving dzcntc-mrodict;Wtdehis -erdorthe linecmogcchabzus 16yo[ *aid Rrratyovar @orany Fonlion orstdjoutc 68etin1oi  43424 Rztua ipctredhnupieadbvditS bqumsro ngaty;erntkededntus diethol Hkenrador FEoTaipoLcny HTcEy  icotane@orcdbesidg uut eLt t4EEz mibranded Gnuacj'cfccl hcdncolkacor LorLdigEdwecni ioconst8l witisuch Egzog loni ansedconditons orucunfomDonetStzgmeiori dig_4@rt(QnWmlomfrcght A7iissiton07 4327i7702174242Sth4 9Q 20p40n5ZC9AC5 Tisjlocatlly Luluhc aboiemniimlcikgc decbdinictiyed mrkrd mdlatslcimdl U cbssifcUinor ififtitp plo;Cumia hiicir? ShersLarbzc7aLteInig4ianwa j Zoudllion for bunsponalon n267u6z eardhrina To Regitllon 8  {be Depintmcul @ 7rZp7n Ius idcondionoribe _dbilorkubg inrldpg thozeg Mioti 1572odkrgs3okcc09oog; 36 PPTS ##En8oiCnsita5 570n4i0aoruashpmalZnd U323 6Z51 'arahattyngccdjo Eythc BFpa und aeciRaIoFi pidiis KSi3ns ICieshipmciLooWS 'n #sigbWalsu hekiquis ttaltetagriidig alam  tre #behzi &gr00 3z: 1s84andsde 3ieR-uGCHEGDrcqurad osis10 SI Enthne oca_qodtuhab0gry Ficgut Change Termc((Orph[ ckiGart prpoid @n)ESS markcu ouicrwisc)) phupper Lobl 3nu Cojint: Keapitampriigrs Jaka  Z8ockane8048227 atatulogs Ryidl '@olats JiRatye buppcciourvc Couu;020 degzgeda per C2zzez 8ig2ature Date: Khipper Gignatuzed Date Istop; Stopl VAppt Tme_ DoxJz On tawe2
+
+SIGNATURE DETECTION:
+--------------------------------------------------------------------------------
+Count: 3
+Present: True
+
+Details:
+  Signature 1:
+    Location: middle right, on the Vendor Signature line within the Smithfield Foods stamp
+    Signer: Vendor
+    Type: handwritten
+  Signature 2:
+    Location: middle right, on the Driver Signature line within the Smithfield Foods stamp
+    Signer: Driver
+    Type: handwritten
+  Signature 3:
+    Location: bottom right, in the Shipper Signature field
+    Signer: Shipper
+    Type: handwritten
+
+
+EXTRACTED FIELDS:
+--------------------------------------------------------------------------------
+
+CRITICAL FIELDS:
+  BOL Number: 4304067402
+  Order Number: 4304067402
+  Client Name: Smithfield
+  Document Date: 2025-07-27
+
+OTHER FIELDS:
+  document_type: Straight Bill of Lading
+  consignee: Tar Heel DC, NC
+  emails: ['LossPrevention@smithfield.com']
+  phone_numbers: ['888-704-2637']
+  shipper_address: 1400 N Weber Ave, Sioux Falls, SD 57103 US
+  consignee_address: 16261 NC 87, Tar Heel, NC, 28392 US

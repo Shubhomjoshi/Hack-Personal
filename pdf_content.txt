@@ -1,0 +1,168 @@
+PDF: Ai-powered Document Intelligence For Trucking Industry.pdf
+Total Pages: 6
+================================================================================
+
+--- PAGE 1 ---
+
+Hackathon Challenge 1 – Ai-powered Document Intelligence For Trucking Industry
+1. Background & Problem Statement
+In the trucking, shipping, and cargo industry, documenta(cid:415)on is a cri(cid:415)cal opera(cid:415)onal and
+compliance component. Documents such as Bills of Lading, Proof of Delivery, Commercial
+Invoices, and others are essen(cid:415)al for cargo iden(cid:415)fica(cid:415)on, delivery confirma(cid:415)on, regulatory
+compliance, and customer billing.
+Currently, drivers capture these documents using mobile phones and send them to the back-
+office in PDF or image format. The back-office team manually:
+ Reviews each document
+ Iden(cid:415)fies the document type
+ Checks document quality and readability
+ Verifies compliance with customer-specific billing rules
+This manual process is (cid:415)me-consuming, error-prone, and does not scale efficiently. The
+objec(cid:415)ve of this hackathon challenge is to design and build an AI-powered Document
+Intelligence Solu(cid:415)on that automates document classifica(cid:415)on, valida(cid:415)on, and quality checks.
+2. Objec(cid:415)ve of the Solu(cid:415)on
+The solu(cid:415)on should leverage AI / ML / Computer Vision capabili(cid:415)es to:
+1. Automa(cid:415)cally iden(cid:415)fy the type of document
+2. Assess whether the scanned document image is clear and readable
+3. Detect and count the number of signatures present in the document
+4. Validate documents against predefined customer-specific rules
+The system should significantly reduce manual interven(cid:415)on and accelerate billing readiness.
+3. Document Types in Scope
+The solu(cid:415)on must support classifica(cid:415)on and processing of the following document types:
+1. Bill of Lading (BOL)
+o Contract of carriage, receipt of goods, and document of (cid:415)tle
+2. Proof of Delivery (POD)
+
+================================================================================
+
+--- PAGE 2 ---
+
+Hackathon Challenge 1 – Ai-powered Document Intelligence For Trucking Industry
+o Signed confirma(cid:415)on by consignee that goods were delivered
+3. Packing List
+o Itemized list of package contents, weights, and dimensions
+4. Commercial Invoice
+o Product details, declared value, and payment terms
+5. Hazardous Materials (Hazmat) Documents
+o Required for dangerous goods with regulatory informa(cid:415)on
+6. Lumper Receipts
+o Proof of payment for loading/unloading labor
+7. Trip Sheets / Trip Reports
+o Miles driven, fuel stops, and state crossings
+8. Freight Invoices / Bills
+o Carrier invoices for transporta(cid:415)on services
+4. Input & Output Specifica(cid:415)ons
+4.1 Input
+ PDF files or scanned images (JPEG, PNG)
+ Documents captured via mobile phone cameras
+ Single or mul(cid:415)-page documents
+4.2 Output
+For each uploaded document, the system should produce:
+ Document Type (BOL, POD, Invoice, etc.)
+ Readability Score (Clear / Par(cid:415)ally Clear / Unreadable)
+ Signature Count (Numeric value)
+ Detected Metadata (Order/Load Number, if present)
+ Valida(cid:415)on Status (Pass / Fail / Needs Review)
+
+================================================================================
+
+--- PAGE 3 ---
+
+Hackathon Challenge 1 – Ai-powered Document Intelligence For Trucking Industry
+ Reason for Failure (if applicable)
+5. Func(cid:415)onal Requirements
+5.1 Document Inges(cid:415)on
+ Allow upload of one or mul(cid:415)ple documents
+ Support PDF and image formats
+ Auto-split mul(cid:415)-page PDFs into logical pages (if applicable)
+5.2 Document Type Iden(cid:415)fica(cid:415)on
+The system must automa(cid:415)cally classify the document into one of the supported document
+types using AI/ML techniques such as:
+ Text-based classifica(cid:415)on (OCR + NLP)
+ Layout and visual pa(cid:425)ern recogni(cid:415)on
+Expected Output:
+ Document Type with confidence score
+5.3 Image Quality & Readability Assessment
+The system must determine whether the document is suitable for further processing and billing.
+Quality checks include:
+ Blurriness detec(cid:415)on
+ Skew / rota(cid:415)on detec(cid:415)on
+ Overexposure or underexposure
+ Par(cid:415)al or cropped document detec(cid:415)on
+Expected Output:
+ Readability Status: Clear / Not Clear
+ Quality Score (0–100)
+
+================================================================================
+
+--- PAGE 4 ---
+
+Hackathon Challenge 1 – Ai-powered Document Intelligence For Trucking Industry
+ Recommenda(cid:415)on: Accept / Re-upload
+5.4 Signature Detec(cid:415)on & Coun(cid:415)ng
+The system must detect and count handwri(cid:425)en signatures present in the document.
+Capabili(cid:415)es:
+ Iden(cid:415)fy signature-like regions
+ Dis(cid:415)nguish signatures from printed names or stamps
+ Count total number of signatures across pages
+Expected Output:
+ Number of signatures detected
+ Signature presence flag (Yes / No)
+5.5 Metadata Extrac(cid:415)on
+The system should a(cid:425)empt to extract key iden(cid:415)fiers using OCR:
+ Order Number / Load Number
+ Invoice Number (if applicable)
+ Date fields
+Expected Output:
+ Extracted fields with confidence score
+5.6 Rule-Based Document Valida(cid:415)on
+The system must validate documents against predefined rules that can vary per customer.
+Sample Rules:
+1. Bill of Lading must contain two signatures
+2. Proof of Delivery must contain consignee signature
+
+================================================================================
+
+--- PAGE 5 ---
+
+Hackathon Challenge 1 – Ai-powered Document Intelligence For Trucking Industry
+3. BOL, POD, Commercial Invoice, Lumper Receipt, Freight Invoice must contain
+Order/Load Number
+4. Some customers require all documents for billing
+5. Some customers require no documents for billing
+Expected Output:
+ Valida(cid:415)on Result: Pass / Fail
+ Rule(s) violated (if any)
+6. Non-Func(cid:415)onal Requirements
+6.1 Performance
+ Process a single document within acceptable (cid:415)me limits (near real-(cid:415)me preferred)
+ Support batch processing
+6.2 Scalability
+ Handle increasing document volumes
+ Modular architecture preferred
+6.3 Accuracy
+ High accuracy for document classifica(cid:415)on and signature detec(cid:415)on
+ Confidence scores should be exposed
+6.4 Security
+ Secure document storage
+ Role-based access (op(cid:415)onal for hackathon)
+7. Assump(cid:415)ons & Constraints
+ Documents may be of varying quality
+ Handwri(cid:425)en content may differ widely
+ Training datasets may be limited
+
+================================================================================
+
+--- PAGE 6 ---
+
+Hackathon Challenge 1 – Ai-powered Document Intelligence For Trucking Industry
+ Cloud services and open-source libraries are allowed
+8. Success Criteria
+A solu(cid:415)on will be considered successful if it:
+ Correctly iden(cid:415)fies document types
+ Accurately assesses readability
+ Reliably detects and counts signatures
+ Validates documents based on customer rules
+ Clearly flags documents that need manual review
+
+================================================================================
+

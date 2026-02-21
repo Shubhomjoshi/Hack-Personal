@@ -1,0 +1,23 @@
+# FIX PASSWORD HASHING ERROR
+
+## Run these commands:
+
+```powershell
+# 1. Stop server (Ctrl+C)
+
+# 2. Reinstall dependencies
+pip install --force-reinstall passlib==1.7.4 bcrypt==4.0.1
+
+# 3. Restart server (use main.py instead of start_server.py)
+python main.py
+```
+
+## Test registration:
+```bash
+curl -X 'POST' 'http://127.0.0.1:8000/api/auth/register' \
+  -H 'Content-Type: application/json' \
+  -d '{"email": "test@test.com", "username": "test", "password": "Test@1234"}'
+```
+
+Should work now!
+
