@@ -94,9 +94,9 @@ class BackgroundProcessor:
                     'brightness': document.brightness_score if hasattr(document, 'brightness_score') else 0.5
                 }
 
-                # If quality is too low, get AI feedback
-                if quality_score < 55.0:
-                    logger.warning(f"⚠️  [AI AGENT] Low quality detected: {quality_score}%")
+                # If quality is too low (< 45%), log warning but CONTINUE processing
+                if quality_score < 45.0:
+                    logger.warning(f"⚠️  [AI AGENT] Very low quality detected: {quality_score}%")
 
                     # Load image for agent analysis
                     image = cv2.imread(document.file_path)
@@ -109,28 +109,23 @@ class BackgroundProcessor:
                             brightness=quality_details['brightness']
                         )
 
-                        # Update document with detailed feedback
-                        feedback_msg = f"Quality score: {quality_score}%\n\n"
-                        feedback_msg += "Issues:\n"
+                        # Store feedback in processing_error but DON'T stop processing
+                        feedback_msg = f"⚠️ Quality Warning ({quality_score}%):\n"
                         for issue in feedback['issues_detected']:
-                            feedback_msg += f"- {issue['issue'].title()}: {issue['explanation']}\n"
-                        feedback_msg += "\nHow to fix:\n"
-                        for i, suggestion in enumerate(feedback['actionable_suggestions'], 1):
-                            feedback_msg += f"{i}. {suggestion}\n"
+                            feedback_msg += f"• {issue['issue'].title()}: {issue['explanation']}\n"
 
                         document.processing_error = feedback_msg
                     else:
-                        document.processing_error = f"Low quality document ({quality_score}%). Please re-upload a clearer image."
+                        document.processing_error = f"⚠️ Low quality warning: {quality_score}%"
 
+                    # Mark as NEEDS_REVIEW but CONTINUE processing
                     document.validation_status = ValidationStatus.NEEDS_REVIEW
-                    document.is_processed = False
-                    document.updated_at = func.now()
-                    db.commit()
 
+                    # Notify driver about quality issue (but still process)
                     self._notify_driver_reupload(document, quality_score, db)
 
-                    logger.info(f"❌ [AI AGENT] Document rejected - Quality: {quality_score}%")
-                    return
+                    logger.info(f"⚠️  [AI AGENT] Low quality ({quality_score}%) - CONTINUING with processing")
+                    # DO NOT RETURN - Continue processing despite low quality
 
             # ============================================
             # STEP 3: INTELLIGENT OCR EXECUTION

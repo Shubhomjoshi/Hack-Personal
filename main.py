@@ -2,14 +2,20 @@
 FastAPI main application file
 All connections and configurations are initialized here
 """
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
+# Load environment variables from .env file FIRST (before any other imports)
+load_dotenv()
+
 from database import init_db
 from routers import auth, documents, validation_rules, analytics, samples
 import routers.orders as orders
+import routers.validation_results as validation_results
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +32,14 @@ async def lifespan(app: FastAPI):
     """
     # Startup: Initialize database
     logger.info("🚀 Starting up Document Intelligence API...")
+
+    # Verify critical environment variables are loaded
+    gemini_key = os.getenv('GEMINI_API_KEY')
+    if gemini_key:
+        logger.info("✅ Gemini API key loaded from environment")
+    else:
+        logger.warning("⚠️  Gemini API key not found in environment")
+
     init_db()
     logger.info("✅ Database initialized!")
     logger.info("📄 Document Intelligence System Ready")
@@ -62,6 +76,7 @@ app.include_router(documents.router, prefix="/api")
 app.include_router(validation_rules.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(samples.router, prefix="/api")
+app.include_router(validation_results.router, prefix="/api")
 app.include_router(orders.router)
 
 
