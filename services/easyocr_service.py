@@ -317,7 +317,7 @@ class EasyOCRService:
             logger.warning(f"Unsupported file type: {file_type}")
             return "", 0.0
 
-    def extract_text_from_file(self, file_path: str) -> Tuple[str, float]:
+    def extract_text_from_file(self, file_path: str) -> str:
         """
         Extract text from any supported file (auto-detect file type from extension)
 
@@ -325,7 +325,7 @@ class EasyOCRService:
             file_path: Path to the document file
 
         Returns:
-            Tuple of (extracted_text, average_confidence)
+            Extracted text as string (confidence is logged but not returned)
         """
         # Get file extension
         _, ext = os.path.splitext(file_path)
@@ -333,8 +333,13 @@ class EasyOCRService:
 
         logger.info(f"Extracting text from file: {file_path} (type: {file_type})")
 
-        # Call appropriate extraction method
-        return self.extract_text(file_path, file_type)
+        # Call appropriate extraction method (returns tuple)
+        text, confidence = self.extract_text(file_path, file_type)
+
+        # Log confidence but only return text
+        logger.info(f"Extraction confidence: {confidence:.2%}")
+
+        return text  # Return only text string, not tuple
 
 
 # Singleton instance

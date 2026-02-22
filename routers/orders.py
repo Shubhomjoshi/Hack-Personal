@@ -6,8 +6,11 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from database import get_db
-from models import OrderInfo
-from schemas import OrderInfoResponse, OrderInfoList, OrderInfoCreate, MessageResponse
+from models import OrderInfo, Document
+from schemas import (
+    OrderInfoResponse, OrderInfoList, OrderInfoCreate,
+    MessageResponse, OrderDocumentListResponse, OrderDocumentItem
+)
 from auth import get_current_user
 
 router = APIRouter(
@@ -146,5 +149,53 @@ def delete_order(
     return MessageResponse(
         message=f"Order '{order.order_number}' deleted successfully",
         success=True
+    )
+
+
+@router.get("/{order_number}/documents", response_model=OrderDocumentListResponse)
+def get_documents_by_order_number(
+    order_number: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get all documents associated with a specific order number
+
+    Filters documents by 'selected_order_number' field which is set during upload.
+
+    Args:
+        order_number: The order number to filter documents by
+
+    Returns:
+        List of documents with key fields:
+        - document_id
+        - document_type (classification)
+        - original_filename
+        - created_at (upload timestamp)
+        - quality_score
+        - validation_status
+    """
+    # Query documents filtered by selected_order_number
+    documents = db.query(Document).filter(
+        Document.selected_order_number == order_number
+    ).order_by(Document.created_at.desc()).all()
+
+    # Convert to response format
+    document_items = [
+        OrderDocumentItem(
+            document_id=doc.id,
+            document_type=doc.document_type,
+            original_filename=doc.original_filename,
+            created_at=doc.created_at,
+            quality_score=doc.quality_score,
+            validation_status=doc.validation_status
+        )
+        for doc in documents
+    ]
+
+    return OrderDocumentListResponse(
+        order_number=order_number,
+        total=len(document_items),
+        documents=document_items
     )
 

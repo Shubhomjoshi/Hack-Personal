@@ -4,7 +4,9 @@ Document routes - Upload, process, and manage documents
 import os
 import uuid
 import shutil
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks, Query, Form
+import logging
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks, Query, Form, Request
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
@@ -14,11 +16,13 @@ from database import get_db
 from models import User, Document, DocumentType, ValidationStatus, OrderInfo
 from schemas import (
     DocumentUploadResponse, DocumentResponse, DocumentListResponse,
-    DocumentProcessingResult, MessageResponse
+    DocumentProcessingResult, MessageResponse, AllDocumentsListResponse, SimpleDocumentItem
 )
 from auth import get_current_user
 from services.processing_service import processing_service
 from services.display_config import get_display_config, get_primary_identifier
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/documents",
@@ -42,10 +46,11 @@ print(f"📁 Upload directory: {UPLOAD_DIR}")
 @router.post("/upload", response_model=List[DocumentUploadResponse], status_code=status.HTTP_201_CREATED)
 async def upload_documents(
     background_tasks: BackgroundTasks,
-    files: List[UploadFile] = File(...),
+    request: Request,
     order_number: Optional[str] = Form(None, description="Order number (Desktop app)"),
     driver_user_id: Optional[int] = Form(None, description="Driver user ID (Mobile app)"),
     customer_id: Optional[int] = Form(None),
+    files: List[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -69,11 +74,18 @@ async def upload_documents(
 
     **Response:** Returns a list of upload results (even for single file upload)
     """
+    # Debug logging
+    logger.info(f"Upload request - order_number: {order_number}, driver_user_id: {driver_user_id}, files: {len(files) if files else 0}")
+
     # Validate that at least one identifier is provided
     if not order_number and not driver_user_id:
+        # Log the request details for debugging
+        logger.error(f"Missing identifier - Headers: {dict(request.headers)}")
+        logger.error(f"Form data received - order_number: {order_number}, driver_user_id: {driver_user_id}")
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either 'order_number' or 'driver_user_id' must be provided"
+            detail="Either 'order_number' or 'driver_user_id' must be provided. Received: order_number={}, driver_user_id={}".format(order_number, driver_user_id)
         )
 
     # Validate that only one identifier is provided
@@ -81,6 +93,13 @@ async def upload_documents(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Please provide only 'order_number' OR 'driver_user_id', not both"
+        )
+
+    # Validate that files are provided
+    if not files or len(files) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No files provided. Please upload at least one file using the 'files' field in multipart/form-data"
         )
 
     # Find the order based on the provided identifier
@@ -112,11 +131,6 @@ async def upload_documents(
                 detail=f"No active order found for driver with user ID {driver_user_id}"
             )
 
-    if not files:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No files provided"
-        )
 
     results = []
     allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff']
@@ -223,6 +237,46 @@ async def upload_documents(
             ))
 
     return results
+
+
+@router.get("/all", response_model=AllDocumentsListResponse)
+def get_all_documents(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all documents from database with simplified response
+
+    Returns all documents with key fields:
+    - document_id
+    - document_type (classification)
+    - original_filename
+    - created_at (upload timestamp)
+    - quality_score
+    - validation_status
+
+    Documents are ordered by created_at (newest first)
+    """
+    # Query all documents
+    documents = db.query(Document).order_by(Document.created_at.desc()).all()
+
+    # Convert to simplified response format
+    document_items = [
+        SimpleDocumentItem(
+            document_id=doc.id,
+            document_type=doc.document_type,
+            original_filename=doc.original_filename,
+            created_at=doc.created_at,
+            quality_score=doc.quality_score,
+            validation_status=doc.validation_status
+        )
+        for doc in documents
+    ]
+
+    return AllDocumentsListResponse(
+        total=len(document_items),
+        documents=document_items
+    )
 
 
 @router.get("/", response_model=DocumentListResponse)
@@ -732,4 +786,139 @@ async def get_document_stats(
             Document.uploaded_by == current_user.id if not current_user.is_admin else True
         ).scalar() or 0.0
     }
+
+
+@router.get("/{document_id}/preview")
+def preview_document(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Preview a document file
+
+    Returns the document file for display in frontend (inline display).
+    Supports PDF, JPEG, PNG, and other image formats.
+
+    Args:
+        document_id: ID of the document to preview
+
+    Returns:
+        File response with inline content disposition for browser preview
+    """
+    # Get document from database
+    document = db.query(Document).filter(Document.id == document_id).first()
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document with ID {document_id} not found"
+        )
+
+    # Check permissions
+    if not current_user.is_admin and document.uploaded_by != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this document"
+        )
+
+    # Check if file exists
+    if not os.path.exists(document.file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document file not found at path: {document.file_path}"
+        )
+
+    # Determine media type based on file extension
+    file_extension = document.file_type.lower() if document.file_type else ""
+
+    media_type_map = {
+        "pdf": "application/pdf",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "tiff": "image/tiff",
+        "tif": "image/tiff",
+        "gif": "image/gif",
+        "bmp": "image/bmp"
+    }
+
+    media_type = media_type_map.get(file_extension, "application/octet-stream")
+
+    # Return file with inline disposition for preview
+    return FileResponse(
+        path=document.file_path,
+        media_type=media_type,
+        filename=document.original_filename,
+        headers={
+            "Content-Disposition": f'inline; filename="{document.original_filename}"'
+        }
+    )
+
+
+@router.get("/{document_id}/download")
+def download_document(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Download a document file
+
+    Returns the document file for download (triggers browser download).
+
+    Args:
+        document_id: ID of the document to download
+
+    Returns:
+        File response with attachment content disposition for browser download
+    """
+    # Get document from database
+    document = db.query(Document).filter(Document.id == document_id).first()
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document with ID {document_id} not found"
+        )
+
+    # Check permissions
+    if not current_user.is_admin and document.uploaded_by != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this document"
+        )
+
+    # Check if file exists
+    if not os.path.exists(document.file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document file not found at path: {document.file_path}"
+        )
+
+    # Determine media type based on file extension
+    file_extension = document.file_type.lower() if document.file_type else ""
+
+    media_type_map = {
+        "pdf": "application/pdf",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "tiff": "image/tiff",
+        "tif": "image/tiff",
+        "gif": "image/gif",
+        "bmp": "image/bmp"
+    }
+
+    media_type = media_type_map.get(file_extension, "application/octet-stream")
+
+    # Return file with attachment disposition for download
+    return FileResponse(
+        path=document.file_path,
+        media_type=media_type,
+        filename=document.original_filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{document.original_filename}"'
+        }
+    )
 

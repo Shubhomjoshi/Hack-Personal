@@ -84,7 +84,7 @@ async def upload_sample(
 
         # Extract text using OCR
         logger.info("Extracting text from sample...")
-        extracted_text, confidence = easyocr_service.extract_text_from_file(file_path)
+        extracted_text = easyocr_service.extract_text_from_file(file_path)
 
         if not extracted_text or len(extracted_text.strip()) < 10:
             # Clean up file
@@ -96,7 +96,7 @@ async def upload_sample(
                 detail="Failed to extract text from sample. Please upload a clearer document."
             )
 
-        logger.info(f"Extracted {len(extracted_text)} characters (confidence: {confidence:.1%})")
+        logger.info(f"Extracted {len(extracted_text)} characters")
 
         # Add to sample store (generates embedding)
         sample_store = get_doc_sample_store()

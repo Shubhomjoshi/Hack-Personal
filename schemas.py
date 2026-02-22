@@ -359,6 +359,43 @@ class OrderInfoList(BaseModel):
     orders: List[OrderInfoResponse]
 
 
+class OrderDocumentItem(BaseModel):
+    """Schema for individual document in order document list"""
+    document_id: int
+    document_type: DocumentTypeEnum
+    original_filename: str
+    created_at: datetime
+    quality_score: Optional[float] = None
+    validation_status: ValidationStatusEnum
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderDocumentListResponse(BaseModel):
+    """Schema for list of documents by order number"""
+    order_number: str
+    total: int
+    documents: List[OrderDocumentItem]
+
+
+class SimpleDocumentItem(BaseModel):
+    """Schema for simplified document list - all documents"""
+    document_id: int
+    document_type: DocumentTypeEnum
+    original_filename: str
+    created_at: datetime
+    quality_score: Optional[float] = None
+    validation_status: ValidationStatusEnum
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AllDocumentsListResponse(BaseModel):
+    """Schema for list of all documents"""
+    total: int
+    documents: List[SimpleDocumentItem]
+
+
 # ============= Generic Response Schemas =============
 
 class MessageResponse(BaseModel):
