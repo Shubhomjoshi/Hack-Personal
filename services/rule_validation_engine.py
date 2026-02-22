@@ -94,56 +94,11 @@ DOC_SPECIFIC_RULES = {
             "severity": "hard"
         },
         {
-            "rule_id": "BOL_002",
-            "name": "BOL Number Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("bol_number")),
-            "fail_reason": "BOL number is missing. This is required for tracking.",
-            "severity": "hard"
-        },
-        {
             "rule_id": "BOL_003",
             "name": "Order/Load Number Present",
             "check": lambda doc: bool(doc.get("order_number") or doc.get("metadata", {}).get("doc_type_fields", {}).get("order_number")),
             "fail_reason": "Order or Load number is missing.",
             "severity": "hard"
-        },
-        {
-            "rule_id": "BOL_004",
-            "name": "Shipper Name Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("shipper")),
-            "fail_reason": "Shipper name is missing.",
-            "severity": "hard"
-        },
-        {
-            "rule_id": "BOL_005",
-            "name": "Consignee Name Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("consignee")),
-            "fail_reason": "Consignee name is missing.",
-            "severity": "hard"
-        },
-        {
-            "rule_id": "BOL_006",
-            "name": "Origin and Destination Present",
-            "check": lambda doc: bool(
-                doc.get("metadata", {}).get("doc_type_fields", {}).get("origin") and
-                doc.get("metadata", {}).get("doc_type_fields", {}).get("destination")
-            ),
-            "fail_reason": "Origin or Destination location is missing.",
-            "severity": "soft"
-        },
-        {
-            "rule_id": "BOL_007",
-            "name": "Freight Terms Specified",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("freight_terms")),
-            "fail_reason": "Freight terms (Prepaid/Collect) not specified.",
-            "severity": "soft"
-        },
-        {
-            "rule_id": "BOL_008",
-            "name": "Weight Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("total_weight")),
-            "fail_reason": "Total weight is missing.",
-            "severity": "soft"
         },
     ],
 

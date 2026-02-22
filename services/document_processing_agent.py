@@ -6,7 +6,7 @@ import os
 import json
 import time
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any
 from google import genai
 from google.genai import types
 import numpy as np
@@ -32,13 +32,12 @@ class DocumentProcessingAgent:
         logger.info("🤖 Initializing Document Processing Agent...")
 
         try:
-            if api_key:
-                os.environ['GEMINI_API_KEY'] = api_key
-            elif not os.getenv('GEMINI_API_KEY'):
-                raise ValueError("No API key provided")
+            # Hardcoded API key (as per user requirement)
+            final_api_key = "AIzaSyBB4zqR0mf6xToxUdYzZ6rkrFJumwWGVE0"
+            logger.info("   Using hardcoded API key")
 
-            self.client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
-            self.model = 'gemini-3-flash-preview'
+            self.client = genai.Client(api_key=final_api_key)
+            self.model = 'gemini-3-flash-preview'  # Using gemini-3-flash-preview as required
             self.available = True
 
             # Agent memory (stores learning from past documents)
@@ -46,9 +45,10 @@ class DocumentProcessingAgent:
 
             logger.info(f"✅ Document Processing Agent ready!")
             logger.info(f"   Model: {self.model}")
+            logger.info(f"   API Key (first 10 chars): {final_api_key[:10]}...")
 
         except Exception as e:
-            logger.warning(f"⚠️  Agent initialization failed: {e}")
+            logger.error(f"❌ Agent initialization failed: {e}")
             self.available = False
             self.client = None
 

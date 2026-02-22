@@ -114,8 +114,10 @@ def root():
 @app.get("/health")
 def health_check():
     """
-    Health check endpoint
+    Health check endpoint - verifies all services are working
     """
+    import os
+
     # Check OCR service
     ocr_status = "unavailable"
     try:
@@ -124,12 +126,30 @@ def health_check():
     except Exception as e:
         ocr_status = f"error: {str(e)}"
 
+    # Check Gemini API key
+    gemini_status = "not_configured"
+    gemini_api_key = os.getenv('GEMINI_API_KEY')
+
+    if gemini_api_key:
+        if gemini_api_key.startswith('AIza'):
+            gemini_status = "configured"
+        else:
+            gemini_status = "invalid_format"
+
+    # Overall health
+    is_healthy = ocr_status != "unavailable" or gemini_status == "configured"
+
     return {
-        "status": "healthy",
+        "status": "healthy" if is_healthy else "degraded",
         "service": "Document Intelligence API",
         "database": "connected",
         "ocr_engine": ocr_status,
-        "message": "Install PaddleOCR: pip install paddlepaddle paddleocr" if ocr_status == "not_installed" else None
+        "gemini_api": gemini_status,
+        "warnings": [
+            "Install PaddleOCR: pip install paddlepaddle paddleocr" if ocr_status == "not_installed" else None,
+            "Gemini API key not configured - signature detection will not work" if gemini_status == "not_configured" else None,
+            "Gemini API key format invalid - should start with 'AIza'" if gemini_status == "invalid_format" else None
+        ]
     }
 
 

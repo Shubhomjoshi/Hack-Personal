@@ -27,20 +27,21 @@ class GeminiDocumentAnalyzer:
         logger.info("Initializing Gemini Document Analyzer...")
 
         try:
-            if api_key:
-                os.environ['GEMINI_API_KEY'] = api_key
-            elif not os.getenv('GEMINI_API_KEY'):
-                raise ValueError("No API key provided. Set GEMINI_API_KEY environment variable.")
+            # Hardcoded API key (as per user requirement)
+            final_api_key = "AIzaSyBB4zqR0mf6xToxUdYzZ6rkrFJumwWGVE0"
+            logger.info("   Using hardcoded API key")
 
-            self.client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
-            self.model = 'gemini-3-flash-preview'  # Using gemini-3-flash-preview
+            # Initialize Gemini client with the API key
+            self.client = genai.Client(api_key=final_api_key)
+            self.model = 'gemini-3-flash-preview'  # Using gemini-3-flash-preview as required
             self.available = True
 
             logger.info(f"✅ Gemini Document Analyzer ready!")
             logger.info(f"   Model: {self.model}")
+            logger.info(f"   API Key (first 10 chars): {final_api_key[:10]}...")
 
         except Exception as e:
-            logger.warning(f"⚠️  Gemini not available: {e}")
+            logger.error(f"❌ Gemini initialization failed: {e}")
             self.available = False
             self.client = None
 
@@ -126,6 +127,7 @@ class GeminiDocumentAnalyzer:
 
             except json.JSONDecodeError as e:
                 logger.warning(f"⚠️  JSON parse error: {e}")
+                # Try to parse response_text if available
                 if 'response_text' in locals():
                     return self._parse_fallback(response_text)
                 else:
@@ -133,6 +135,23 @@ class GeminiDocumentAnalyzer:
 
             except Exception as e:
                 error_str = str(e)
+
+                # Check for API key errors (non-retryable)
+                if any(keyword in error_str for keyword in ['API_KEY_INVALID', 'API Key not found', 'INVALID_ARGUMENT', '400']):
+                    logger.error("❌ Gemini API Key Error!")
+                    logger.error(f"   Error: {error_str}")
+                    logger.error("   💡 Solution:")
+                    logger.error("      1. Visit: https://aistudio.google.com/app/apikey")
+                    logger.error("      2. Generate a new API key")
+                    logger.error("      3. Update your .env file: GEMINI_API_KEY=your_new_key")
+                    logger.error("      4. Restart the server")
+                    logger.error("      5. Run: python test_gemini_api_key.py to verify")
+                    return {
+                        "error": "Invalid or missing Gemini API key",
+                        "error_type": "API_KEY_ERROR",
+                        "available": False,
+                        "solution": "Update GEMINI_API_KEY in .env file and restart server"
+                    }
 
                 # Check if it's a retryable error (503, rate limit, high demand)
                 is_retryable = any(keyword in error_str.lower() for keyword in [
