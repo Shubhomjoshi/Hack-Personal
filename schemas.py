@@ -124,15 +124,45 @@ class UserResponse(UserBase):
 
 # ============= Document Schemas =============
 
-class DocumentUploadResponse(BaseModel):
-    """Response after document upload"""
+class DocumentUpload(BaseModel):
+    """Schema for document upload response"""
     document_id: int
     filename: str
     file_size: int
     message: str
+    selected_order_number: Optional[str] = None  # Order selected at upload (from params)
+    customer_code: Optional[str] = None
+    bill_to_code: Optional[str] = None
+    driver_id: Optional[int] = None
     web_status: Optional[str] = "Sent to Imaging"
     mob_status: Optional[str] = "Uploaded Successfully - Verification Pending"
     processing_started: bool = True
+
+
+# Alias for backward compatibility
+DocumentUploadResponse = DocumentUpload
+
+
+class DocumentUploadRequest(BaseModel):
+    """Schema for document upload request parameters"""
+    order_number: Optional[str] = None
+    driver_user_id: Optional[int] = None  # User ID from mobile app
+
+    @field_validator('order_number', 'driver_user_id')
+    @classmethod
+    def validate_at_least_one(cls, v, info):
+        """Validate that at least one of order_number or driver_user_id is provided"""
+        # This validator runs for each field, so we check if ANY field has a value
+        return v
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Check that at least one is provided
+        if not self.order_number and not self.driver_user_id:
+            raise ValueError("Either 'order_number' or 'driver_user_id' must be provided")
+        # Check that only one is provided
+        if self.order_number and self.driver_user_id:
+            raise ValueError("Please provide only 'order_number' OR 'driver_user_id', not both")
 
 
 class DocumentClassification(BaseModel):
@@ -296,6 +326,37 @@ class DocumentStatistics(BaseModel):
     average_quality_score: float
     total_with_signatures: int
     validation_pass_rate: float
+
+
+# ============= Order Info Schemas =============
+
+class OrderInfoBase(BaseModel):
+    """Base order info schema"""
+    order_number: str
+    customer_code: str
+    bill_to_code: str
+
+
+class OrderInfoCreate(OrderInfoBase):
+    """Schema for creating order info"""
+    driver_id: Optional[int] = None
+
+
+class OrderInfoResponse(OrderInfoBase):
+    """Schema for order info response"""
+    id: int
+    driver_id: Optional[int] = None
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderInfoList(BaseModel):
+    """Schema for list of order info"""
+    total: int
+    orders: List[OrderInfoResponse]
 
 
 # ============= Generic Response Schemas =============

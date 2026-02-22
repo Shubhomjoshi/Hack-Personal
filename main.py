@@ -9,6 +9,7 @@ import logging
 
 from database import init_db
 from routers import auth, documents, validation_rules, analytics, samples
+import routers.orders as orders
 
 # Configure logging
 logging.basicConfig(
@@ -61,6 +62,7 @@ app.include_router(documents.router, prefix="/api")
 app.include_router(validation_rules.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(samples.router, prefix="/api")
+app.include_router(orders.router)
 
 
 @app.get("/")

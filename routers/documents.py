@@ -4,14 +4,14 @@ Document routes - Upload, process, and manage documents
 import os
 import uuid
 import shutil
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks, Query, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime
 
 from database import get_db
-from models import User, Document, DocumentType, ValidationStatus
+from models import User, Document, DocumentType, ValidationStatus, OrderInfo
 from schemas import (
     DocumentUploadResponse, DocumentResponse, DocumentListResponse,
     DocumentProcessingResult, MessageResponse
@@ -43,25 +43,75 @@ print(f"📁 Upload directory: {UPLOAD_DIR}")
 async def upload_documents(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
-    customer_id: Optional[int] = None,
+    order_number: Optional[str] = Form(None, description="Order number (Desktop app)"),
+    driver_user_id: Optional[int] = Form(None, description="Driver user ID (Mobile app)"),
+    customer_id: Optional[int] = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Upload one or more documents for processing (Unified endpoint)
 
+    **Required (one of):**
+    - **order_number**: Order number from order_info table (Desktop app uploads)
+    - **driver_user_id**: User ID of driver (Mobile app uploads - system will find their active order)
+
+    **Optional:**
     - **files**: Single file or list of PDF/image files (JPEG, PNG, TIFF)
     - **customer_id**: Customer ID for customer-specific validation rules (optional)
 
     **Usage Examples:**
-    - Single file: Send one file in the 'files' field
-    - Multiple files: Send multiple files in the 'files' field
+    - Desktop app: Send order_number with files
+    - Mobile app: Send driver_user_id with files (system finds driver's active order)
 
     The documents will be saved immediately and processed in the background.
     OCR engine will extract text, check quality, detect signatures, classify documents, and validate rules.
 
     **Response:** Returns a list of upload results (even for single file upload)
     """
+    # Validate that at least one identifier is provided
+    if not order_number and not driver_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either 'order_number' or 'driver_user_id' must be provided"
+        )
+
+    # Validate that only one identifier is provided
+    if order_number and driver_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide only 'order_number' OR 'driver_user_id', not both"
+        )
+
+    # Find the order based on the provided identifier
+    order = None
+
+    if order_number:
+        # Desktop app: Direct order number lookup
+        order = db.query(OrderInfo).filter(
+            OrderInfo.order_number == order_number,
+            OrderInfo.is_active == True
+        ).first()
+
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Active order with number '{order_number}' not found"
+            )
+
+    elif driver_user_id:
+        # Mobile app: Find driver's active order
+        order = db.query(OrderInfo).filter(
+            OrderInfo.driver_id == driver_user_id,
+            OrderInfo.is_active == True
+        ).first()
+
+        if not order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No active order found for driver with user ID {driver_user_id}"
+            )
+
     if not files:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -111,7 +161,7 @@ async def upload_documents(
             # Get file size
             file_size = os.path.getsize(file_path)
 
-            # Create document record in database
+            # Create document record in database with order linkage
             document = Document(
                 filename=unique_filename,
                 original_filename=file.filename,
@@ -121,7 +171,10 @@ async def upload_documents(
                 uploaded_by=current_user.id,
                 customer_id=customer_id,
                 is_processed=False,
-                validation_status=ValidationStatus.PENDING
+                validation_status=ValidationStatus.PENDING,
+                # Link to order_info table
+                order_info_id=order.id,
+                selected_order_number=order.order_number  # Store selected order (from upload params, not OCR)
             )
 
             db.add(document)
@@ -149,6 +202,10 @@ async def upload_documents(
                 filename=unique_filename,
                 file_size=file_size,
                 message="Uploaded Successfully",
+                selected_order_number=order.order_number,
+                customer_code=order.customer_code,
+                bill_to_code=order.bill_to_code,
+                driver_id=order.driver_id,
                 web_status="Sent to Imaging",
                 mob_status="Uploaded Successfully - Verification Pending",
                 processing_started=True
@@ -174,6 +231,8 @@ def get_documents(
     limit: int = Query(100, ge=1, le=500),
     document_type: Optional[str] = None,
     validation_status: Optional[str] = None,
+    order_number: Optional[str] = Query(None, description="Filter by order number (Desktop app)"),
+    driver_id: Optional[int] = Query(None, description="Filter by driver ID (Mobile app)"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -184,14 +243,47 @@ def get_documents(
     - **limit**: Maximum number of records to return
     - **document_type**: Filter by document type (optional)
     - **validation_status**: Filter by validation status (optional)
+    - **order_number**: Filter by order number - matches with selected_order_number (Desktop app)
+    - **driver_id**: Filter by driver's user ID - finds order and matches with selected_order_number (Mobile app)
+
+    **Note:** Can provide either order_number OR driver_id, not both
     """
+    # Validate that not both are provided
+    if order_number and driver_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide only 'order_number' OR 'driver_id', not both"
+        )
+
     query = db.query(Document)
 
     # Filter by user (non-admin can only see their own documents)
     if not current_user.is_admin:
         query = query.filter(Document.uploaded_by == current_user.id)
 
-    # Apply filters
+    # Apply order-based filters
+    if order_number:
+        # Desktop app: Filter by selected_order_number matching provided order_number
+        query = query.filter(Document.selected_order_number == order_number)
+
+    elif driver_id:
+        # Mobile app: Find driver's active order, then filter by selected_order_number
+        driver_order = db.query(OrderInfo).filter(
+            OrderInfo.driver_id == driver_id,
+            OrderInfo.is_active == True
+        ).first()
+
+        if not driver_order:
+            # No active order for driver - return empty result
+            return DocumentListResponse(
+                total=0,
+                documents=[]
+            )
+
+        # Filter by the driver's order number
+        query = query.filter(Document.selected_order_number == driver_order.order_number)
+
+    # Apply other filters
     if document_type:
         try:
             doc_type_enum = DocumentType(document_type)

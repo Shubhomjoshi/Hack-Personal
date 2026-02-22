@@ -794,24 +794,35 @@ class BackgroundProcessor:
             fields = gemini_result.get('extracted_fields', {})
 
             if "error" in gemini_result or not fields:
-                # Fallback to static values if Gemini failed
-                logger.warning(f"⚠️  Gemini fields not available, using static metadata values")
-                document.order_number = "ORD-2026-001"
-                document.invoice_number = "INV-2026-001"
-                document.document_date = "2026-02-20"
+                # Gemini failed - leave fields as NULL
+                logger.warning(f"⚠️  Gemini fields not available, leaving order_number as NULL")
+                document.order_number = None
+                document.invoice_number = None
+                document.document_date = None
             else:
                 # Use Gemini extracted fields
 
-                # BOL Number / Order Number (same value)
-                bol_number = fields.get('bol_number') or fields.get('order_number')
+                # BOL Number / Order Number (check multiple variations)
+                bol_number = (
+                    fields.get('bol_number') or
+                    fields.get('bol_numbers') or
+                    fields.get('order_number') or
+                    fields.get('order_numbers')
+                )
+
+                # Handle if it's a list
+                if isinstance(bol_number, list) and len(bol_number) > 0:
+                    bol_number = bol_number[0]
+
                 if bol_number:
                     # Ensure it's a string and clean it
                     bol_number = str(bol_number).strip()
                     document.order_number = bol_number
                     logger.info(f"   ✅ BOL/Order Number from Gemini: {bol_number}")
                 else:
-                    document.order_number = "ORD-2026-001"
-                    logger.warning(f"   ⚠️  No BOL number found, using static")
+                    document.order_number = None
+                    logger.warning(f"   ⚠️  No BOL/Order number found in Gemini extraction")
+                    logger.warning(f"   Available Gemini fields: {list(fields.keys())}")
 
                 # Client Name (from extracted_metadata as it's not in main model)
                 client_name = fields.get('client_name')
@@ -827,16 +838,17 @@ class BackgroundProcessor:
                     document.document_date = doc_date
                     logger.info(f"   ✅ Document Date from Gemini: {doc_date}")
                 else:
-                    document.document_date = "2026-02-20"
-                    logger.warning(f"   ⚠️  No document date found, using static")
+                    document.document_date = None
+                    logger.warning(f"   ⚠️  No document date found, keeping as NULL")
 
-                # Invoice Number (keep static for now)
+                # Invoice Number
                 invoice_num = fields.get('invoice_numbers')
                 if invoice_num and isinstance(invoice_num, list) and len(invoice_num) > 0:
                     document.invoice_number = invoice_num[0]
                     logger.info(f"   ✅ Invoice Number from Gemini: {invoice_num[0]}")
                 else:
-                    document.invoice_number = "INV-2026-001"
+                    document.invoice_number = None
+                    logger.warning(f"   ⚠️  No invoice number found, keeping as NULL")
 
                 # Consignee (store in metadata)
                 consignee = fields.get('consignee')
@@ -860,10 +872,10 @@ class BackgroundProcessor:
             logger.error(f"❌ Metadata update failed: {e}")
             import traceback
             logger.error(traceback.format_exc())
-            # Fallback to static
-            document.order_number = "ORD-2026-001"
-            document.invoice_number = "INV-2026-001"
-            document.document_date = "2026-02-20"
+            # Keep as NULL - don't use static fallback
+            document.order_number = None
+            document.invoice_number = None
+            document.document_date = None
             db.commit()
 
     def _run_classification(self, document: Document, db: Session):

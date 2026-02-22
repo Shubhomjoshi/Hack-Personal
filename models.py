@@ -83,7 +83,7 @@ class Document(Base):
     has_signature = Column(Boolean, default=False)
 
     # Metadata
-    order_number = Column(String(255), nullable=True)
+    order_number = Column(String(255), nullable=True)  # Extracted from OCR/document
     invoice_number = Column(String(255), nullable=True)
     document_date = Column(String(100), nullable=True)
     extracted_metadata = Column(JSON, nullable=True)  # Stores client_name and other metadata
@@ -102,12 +102,17 @@ class Document(Base):
     customer_id = Column(Integer, nullable=True)  # For customer-specific rules
     client_name = Column(String(255), nullable=True)  # New column for client name
 
+    # Order relation - Links document to order_info table
+    order_info_id = Column(Integer, ForeignKey("order_info.id"), nullable=True, index=True)
+    selected_order_number = Column(String(255), nullable=True, index=True)  # Order number selected at upload (from driver_id or order_number param)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     uploaded_by_user = relationship("User", back_populates="documents")
     validation_rules_applied = relationship("DocumentValidation", back_populates="document")
+    order_info = relationship("OrderInfo", backref="documents")
 
 
 class ValidationRule(Base):
@@ -229,5 +234,25 @@ class ClassificationResult(Base):
     document = relationship("Document")
     matched_sample = relationship("DocTypeSample")
     corrected_by_user = relationship("User")
+
+
+class OrderInfo(Base):
+    """
+    Order Information - Stores order numbers with associated customer and bill-to codes
+    """
+    __tablename__ = "order_info"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_number = Column(String(100), unique=True, nullable=False, index=True)
+    customer_code = Column(String(50), nullable=False, index=True)
+    bill_to_code = Column(String(50), nullable=False, index=True)
+    driver_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    is_active = Column(Boolean, default=True, index=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    driver = relationship("User", backref="assigned_orders")
 
 
