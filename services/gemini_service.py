@@ -28,7 +28,7 @@ class GeminiDocumentAnalyzer:
 
         try:
             # Hardcoded API key (as per user requirement)
-            final_api_key = "AIzaSyBB4zqR0mf6xToxUdYzZ6rkrFJumwWGVE0"
+            final_api_key = "AIzaSyAjcPU2ofwvVY-6foyDWtBo1NPT3wuWi90"
             logger.info("   Using hardcoded API key")
 
             # Initialize Gemini client with the API key
