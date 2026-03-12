@@ -28,7 +28,7 @@ class GeminiDocumentAnalyzer:
 
         try:
             # Hardcoded API key (as per user requirement)
-            final_api_key = "AIzaSyAjcPU2ofwvVY-6foyDWtBo1NPT3wuWi90"
+            final_api_key = "AIzaSyDobjAhWHYUJBaY7FBG-KiSuYLNZYITUdc"
             logger.info("   Using hardcoded API key")
 
             # Initialize Gemini client with the API key
@@ -246,8 +246,18 @@ STEP 3: CRITICAL FIELD EXTRACTION (IMPORTANT!)
 - Phone numbers
 - Addresses
 
+**TRIP SHEET SPECIFIC FIELDS** (If document is a Trip Sheet):
+- **Driver Code**: Driver identification code/number (e.g., "DRV-123", "D001")
+  Common labels: "Driver Code", "Driver ID", "Driver #"
+- **Trailer Number**: Trailer identification number (e.g., "T-7868", "TRL-456")
+  Common labels: "Trailer", "Trailer No", "Trailer #", "Trailer Number"
+- **Load Number**: Load/shipment identification number (e.g., "LD-9981", "LOAD-123")
+  Common labels: "Load", "Load No", "Load #", "Load Number"
+- **Tractor Number**: Tractor/truck identification number (e.g., "TRC-882", "TRUCK-456")
+  Common labels: "Tractor", "Tractor No", "Tractor #", "Truck", "Truck No", "Unit"
+
 STEP 4: DOCUMENT METADATA
-- Document type (BOL, Invoice, Receipt, etc.)
+- Document type (BOL, Invoice, Receipt, Trip Sheet, etc.)
 - Key parties involved (shipper, carrier, consignee)
 
 Return response as JSON (NO markdown, NO code blocks):
@@ -269,7 +279,7 @@ Return response as JSON (NO markdown, NO code blocks):
   },
   
   "extracted_fields": {
-    "document_type": "BOL/Invoice/etc",
+    "document_type": "BOL/Invoice/Trip Sheet/etc",
     "bol_number": "single BOL/Order number (e.g., 44853)",
     "order_number": "same as BOL number",
     "client_name": "main client/shipper company name",
@@ -279,7 +289,13 @@ Return response as JSON (NO markdown, NO code blocks):
     "emails": ["list of emails"],
     "phone_numbers": ["list"],
     "shipper_address": "shipper full address",
-    "consignee_address": "consignee full address"
+    "consignee_address": "consignee full address",
+    
+    // Trip Sheet specific fields (include if document_type is "Trip Sheet")
+    "driver_code": "driver identification code (e.g., DRV-123)",
+    "trailer_number": "trailer identification number (e.g., T-7868)",
+    "load_number": "load/shipment number (e.g., LD-9981)",
+    "tractor_number": "tractor/truck number (e.g., TRC-882)"
   },
   
   "key_information": "2-3 sentence summary of the document",

@@ -66,16 +66,8 @@ GENERAL_RULES = [
         "severity": "soft",
         "category": "data"
     },
-    {
-        "rule_id": "GEN_006",
-        "name": "Extraction Completeness",
-        "description": "At least 50% of expected fields must be extracted",
-        "check": lambda doc: doc.get("metadata", {}).get("field_extraction_validation", {}).get("extraction_score", 0) >= 0.50,
-        "fail_reason": "Less than 50% of required fields could be read from document.",
-        "severity": "soft",
-        "category": "data"
-    },
 ]
+
 
 
 # ============================================
@@ -318,38 +310,23 @@ DOC_SPECIFIC_RULES = {
     DocumentType.TRIP_SHEET: [
         {
             "rule_id": "TRP_001",
-            "name": "Trip Number Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("trip_number")),
-            "fail_reason": "Trip/Load number is missing.",
+            "name": "Load Number Present",
+            "check": lambda doc: bool(
+                doc.get("order_number") or
+                doc.get("metadata", {}).get("doc_type_fields", {}).get("load_number")
+            ),
+            "fail_reason": "Load Number is missing.",
             "severity": "hard"
         },
         {
             "rule_id": "TRP_002",
-            "name": "Driver Name Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("driver_name")),
-            "fail_reason": "Driver name is missing.",
+            "name": "Date Present",
+            "check": lambda doc: bool(
+                doc.get("document_date") or
+                doc.get("metadata", {}).get("doc_type_fields", {}).get("date")
+            ),
+            "fail_reason": "Date is missing.",
             "severity": "hard"
-        },
-        {
-            "rule_id": "TRP_003",
-            "name": "Driver Signature Required",
-            "check": lambda doc: (doc.get("signature_count") or 0) >= 1,
-            "fail_reason": "Driver signature is required on trip sheet.",
-            "severity": "hard"
-        },
-        {
-            "rule_id": "TRP_004",
-            "name": "Mileage Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("total_miles")),
-            "fail_reason": "Total mileage is missing.",
-            "severity": "soft"
-        },
-        {
-            "rule_id": "TRP_005",
-            "name": "Truck Number Present",
-            "check": lambda doc: bool(doc.get("metadata", {}).get("doc_type_fields", {}).get("truck_number")),
-            "fail_reason": "Truck/Unit number is missing.",
-            "severity": "soft"
         },
     ],
 

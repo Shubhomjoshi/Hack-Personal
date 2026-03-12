@@ -1001,6 +1001,13 @@ class BackgroundProcessor:
             # Add document-type specific fields to metadata
             document.extracted_metadata['doc_type_fields'] = extracted_fields
 
+            # Special handling for Trip Sheet: BOL/Order Number is the Load Number
+            if document.document_type == DocumentType.TRIP_SHEET:
+                if document.order_number and not extracted_fields.get('load_number'):
+                    extracted_fields['load_number'] = document.order_number
+                    document.extracted_metadata['doc_type_fields']['load_number'] = document.order_number
+                    logger.info(f"   📝 Trip Sheet: Mapped order_number to load_number: {document.order_number}")
+
             # Validate completeness
             validation = extractor.validate_completeness(extracted_fields, threshold=0.5)
             document.extracted_metadata['field_extraction_validation'] = validation

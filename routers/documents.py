@@ -29,6 +29,48 @@ router = APIRouter(
     tags=["Documents"]
 )
 
+
+def sanitize_filename_for_header(filename: str) -> str:
+    """
+    Sanitize filename for use in HTTP headers (Content-Disposition).
+    Removes or replaces characters that can't be encoded in latin-1.
+
+    Args:
+        filename: Original filename that may contain Unicode characters
+
+    Returns:
+        Sanitized filename safe for HTTP headers
+    """
+    if not filename:
+        return "document"
+
+    # Replace common problematic Unicode characters
+    replacements = {
+        '\u202f': ' ',  # Narrow no-break space → regular space
+        '\u00a0': ' ',  # No-break space → regular space
+        '\u2013': '-',  # En dash → hyphen
+        '\u2014': '-',  # Em dash → hyphen
+        '\u2018': "'",  # Left single quote → apostrophe
+        '\u2019': "'",  # Right single quote → apostrophe
+        '\u201c': '"',  # Left double quote → quote
+        '\u201d': '"',  # Right double quote → quote
+    }
+
+    sanitized = filename
+    for unicode_char, replacement in replacements.items():
+        sanitized = sanitized.replace(unicode_char, replacement)
+
+    # Try to encode to latin-1, replacing any remaining problematic characters
+    try:
+        # Test if it can be encoded
+        sanitized.encode('latin-1')
+        return sanitized
+    except UnicodeEncodeError:
+        # If still has issues, use ASCII-safe encoding
+        # This will replace any non-ASCII characters with '?'
+        return sanitized.encode('ascii', errors='replace').decode('ascii')
+
+
 # Upload directory configuration
 # Azure App Service: Use persistent storage path /home/data
 # Local development: Use current directory
@@ -806,54 +848,101 @@ def preview_document(
     Returns:
         File response with inline content disposition for browser preview
     """
-    # Get document from database
-    document = db.query(Document).filter(Document.id == document_id).first()
+    try:
+        # Get document from database
+        document = db.query(Document).filter(Document.id == document_id).first()
 
-    if not document:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document with ID {document_id} not found"
-        )
+        if not document:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document with ID {document_id} not found"
+            )
 
-    # Check permissions
-    if not current_user.is_admin and document.uploaded_by != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this document"
-        )
+        # Check permissions
+        if not current_user.is_admin and document.uploaded_by != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this document"
+            )
 
-    # Check if file exists
-    if not os.path.exists(document.file_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document file not found at path: {document.file_path}"
-        )
+        # Check if file exists
+        if not os.path.exists(document.file_path):
+            logger.error(f"Document file not found: {document.file_path}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document file not found at path: {document.file_path}"
+            )
 
-    # Determine media type based on file extension
-    file_extension = document.file_type.lower() if document.file_type else ""
+        # Determine file extension from multiple sources
+        file_extension = None
 
-    media_type_map = {
-        "pdf": "application/pdf",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "png": "image/png",
-        "tiff": "image/tiff",
-        "tif": "image/tiff",
-        "gif": "image/gif",
-        "bmp": "image/bmp"
-    }
+        # Method 1: Try from database file_type field
+        if document.file_type:
+            file_extension = document.file_type.lower().strip().lstrip('.')
 
-    media_type = media_type_map.get(file_extension, "application/octet-stream")
+        # Method 2: Fallback to extracting from file_path
+        if not file_extension or file_extension == "":
+            try:
+                file_extension = os.path.splitext(document.file_path)[1].lower().lstrip('.')
+            except Exception as e:
+                logger.warning(f"Failed to extract extension from path: {e}")
 
-    # Return file with inline disposition for preview
-    return FileResponse(
-        path=document.file_path,
-        media_type=media_type,
-        filename=document.original_filename,
-        headers={
-            "Content-Disposition": f'inline; filename="{document.original_filename}"'
+        # Method 3: Fallback to extracting from original_filename
+        if not file_extension or file_extension == "":
+            try:
+                file_extension = os.path.splitext(document.original_filename)[1].lower().lstrip('.')
+            except Exception as e:
+                logger.warning(f"Failed to extract extension from filename: {e}")
+                file_extension = ""
+
+        logger.info(f"Preview document {document_id}: extension='{file_extension}', path={document.file_path}")
+
+        # Media type mapping - comprehensive list
+        media_type_map = {
+            "pdf": "application/pdf",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "tiff": "image/tiff",
+            "tif": "image/tiff",
+            "gif": "image/gif",
+            "bmp": "image/bmp",
+            "webp": "image/webp",
+            "svg": "image/svg+xml",
+            "ico": "image/x-icon"
         }
-    )
+
+        # Get media type with fallback
+        media_type = media_type_map.get(file_extension, "application/octet-stream")
+
+        logger.info(f"Serving file with media_type: {media_type}")
+
+        # Sanitize filename for HTTP header (prevents latin-1 encoding errors)
+        safe_filename = sanitize_filename_for_header(document.original_filename)
+
+        if safe_filename != document.original_filename:
+            logger.warning(f"Filename sanitized: '{document.original_filename}' → '{safe_filename}'")
+
+        # Return file with inline disposition for preview
+        return FileResponse(
+            path=document.file_path,
+            media_type=media_type,
+            filename=safe_filename,
+            headers={
+                "Content-Disposition": f'inline; filename="{safe_filename}"'
+            }
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error in preview_document for ID {document_id}: {str(e)}")
+        logger.error(f"Traceback: ", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to preview document: {str(e)}"
+        )
 
 
 @router.get("/{document_id}/download")
@@ -873,52 +962,97 @@ def download_document(
     Returns:
         File response with attachment content disposition for browser download
     """
-    # Get document from database
-    document = db.query(Document).filter(Document.id == document_id).first()
+    try:
+        # Get document from database
+        document = db.query(Document).filter(Document.id == document_id).first()
 
-    if not document:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document with ID {document_id} not found"
-        )
+        if not document:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document with ID {document_id} not found"
+            )
 
-    # Check permissions
-    if not current_user.is_admin and document.uploaded_by != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this document"
-        )
+        # Check permissions
+        if not current_user.is_admin and document.uploaded_by != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this document"
+            )
 
-    # Check if file exists
-    if not os.path.exists(document.file_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Document file not found at path: {document.file_path}"
-        )
+        # Check if file exists
+        if not os.path.exists(document.file_path):
+            logger.error(f"Document file not found: {document.file_path}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document file not found at path: {document.file_path}"
+            )
 
-    # Determine media type based on file extension
-    file_extension = document.file_type.lower() if document.file_type else ""
+        # Determine file extension from multiple sources
+        file_extension = None
 
-    media_type_map = {
-        "pdf": "application/pdf",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "png": "image/png",
-        "tiff": "image/tiff",
-        "tif": "image/tiff",
-        "gif": "image/gif",
-        "bmp": "image/bmp"
-    }
+        # Method 1: Try from database file_type field
+        if document.file_type:
+            file_extension = document.file_type.lower().strip().lstrip('.')
 
-    media_type = media_type_map.get(file_extension, "application/octet-stream")
+        # Method 2: Fallback to extracting from file_path
+        if not file_extension or file_extension == "":
+            try:
+                file_extension = os.path.splitext(document.file_path)[1].lower().lstrip('.')
+            except Exception as e:
+                logger.warning(f"Failed to extract extension from path: {e}")
 
-    # Return file with attachment disposition for download
-    return FileResponse(
-        path=document.file_path,
-        media_type=media_type,
-        filename=document.original_filename,
-        headers={
-            "Content-Disposition": f'attachment; filename="{document.original_filename}"'
+        # Method 3: Fallback to extracting from original_filename
+        if not file_extension or file_extension == "":
+            try:
+                file_extension = os.path.splitext(document.original_filename)[1].lower().lstrip('.')
+            except Exception as e:
+                logger.warning(f"Failed to extract extension from filename: {e}")
+                file_extension = ""
+
+        logger.info(f"Download document {document_id}: extension='{file_extension}', path={document.file_path}")
+
+        # Media type mapping - comprehensive list
+        media_type_map = {
+            "pdf": "application/pdf",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "tiff": "image/tiff",
+            "tif": "image/tiff",
+            "gif": "image/gif",
+            "bmp": "image/bmp",
+            "webp": "image/webp",
+            "svg": "image/svg+xml",
+            "ico": "image/x-icon"
         }
-    )
+
+        # Get media type with fallback
+        media_type = media_type_map.get(file_extension, "application/octet-stream")
+
+        # Sanitize filename for HTTP header (prevents latin-1 encoding errors)
+        safe_filename = sanitize_filename_for_header(document.original_filename)
+
+        if safe_filename != document.original_filename:
+            logger.warning(f"Filename sanitized: '{document.original_filename}' → '{safe_filename}'")
+
+        # Return file with attachment disposition for download
+        return FileResponse(
+            path=document.file_path,
+            media_type=media_type,
+            filename=safe_filename,
+            headers={
+                "Content-Disposition": f'attachment; filename="{safe_filename}"'
+            }
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Error in download_document for ID {document_id}: {str(e)}")
+        logger.error(f"Traceback: ", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to download document: {str(e)}"
+        )
 

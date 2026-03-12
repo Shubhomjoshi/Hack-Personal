@@ -83,17 +83,15 @@ LUMPER_FIELDS = {
 }
 
 TRIP_FIELDS = {
-    "trip_number": r"(?:trip|load|trip no)[\s#:no\.]*([A-Z0-9\-]+)",
-    "driver_name": r"(?:driver|driver name)[\s:]*([A-Za-z\s]+)",
-    "truck_number": r"(?:truck|unit|vehicle)[\s#:no\.]*([A-Z0-9\-]+)",
+    "driver_code": r"(?:driver code|driver id|driver #)[\s#:no\.]*([A-Z0-9\-]+)",
+    "trailer_number": r"(?:trailer|trailer no|trailer #|trailer number)[\s#:no\.]*([A-Z0-9\-]+)",
+    "load_number": r"(?:load|load no|load #|load number)[\s#:no\.]*([A-Z0-9\-]+)",
+    "tractor_number": r"(?:tractor|tractor no|tractor #|tractor number|truck|truck no|unit)[\s#:no\.]*([A-Z0-9\-]+)",
+    # Keep optional fields for additional context
+    "driver_name": r"(?:driver name|driver)[\s:]*([A-Za-z\s]+)",
     "date": r"date[\s:]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})",
-    "start_odometer": r"(?:start|beginning|odometer start)[\s:]*([0-9,]+)",
-    "end_odometer": r"(?:end|ending|odometer end)[\s:]*([0-9,]+)",
-    "total_miles": r"(?:total miles|miles driven|mileage)[\s:]*([0-9,]+)",
     "origin": r"(?:origin|from|start location)[\s:]*([A-Za-z\s,]+)",
     "destination": r"(?:destination|to|end location)[\s:]*([A-Za-z\s,]+)",
-    "fuel_stops": r"(?:fuel stops|stops)[\s:]*([0-9]+)",
-    "states_crossed": r"(?:states|states crossed)[\s:]*([A-Z,\s]+)",
 }
 
 FREIGHT_INV_FIELDS = {

@@ -1,79 +1,67 @@
 """
-Safe Database Initialization and Startup
+FastAPI Server Startup Script
+AI-Powered Document Intelligence Backend
+
+Usage:
+    python start_server.py              # Development mode with auto-reload
+    python start_server.py --prod       # Production mode
+    python start_server.py --port 8080  # Custom port
 """
+
 import sys
 import os
+import uvicorn
 
-print("=" * 70)
-print("Starting FastAPI Application")
-print("=" * 70)
-print()
-
-# Step 1: Check dependencies
-print("Step 1: Checking dependencies...")
-required_packages = ['fastapi', 'sqlalchemy', 'pydantic', 'uvicorn']
-missing_packages = []
-
-for package in required_packages:
-    try:
-        __import__(package)
-        print(f"  ✅ {package}")
-    except ImportError:
-        print(f"  ❌ {package} - NOT INSTALLED")
-        missing_packages.append(package)
-
-if missing_packages:
+def main():
+    # Parse command line arguments
+    args = sys.argv[1:]
+    
+    # Default configuration
+    host = "0.0.0.0"
+    port = 8000
+    reload = True  # Auto-reload for development
+    
+    # Check for arguments
+    if "--prod" in args:
+        reload = False
+        print("🚀 Starting in PRODUCTION mode...")
+    else:
+        print("🔧 Starting in DEVELOPMENT mode with auto-reload...")
+    
+    if "--port" in args:
+        try:
+            port_index = args.index("--port") + 1
+            port = int(args[port_index])
+        except (ValueError, IndexError):
+            print("⚠️  Invalid port specified, using default: 8000")
+            port = 8000
+    
+    # Display startup information
+    print("=" * 70)
+    print("  📄 AI-Powered Document Intelligence API")
+    print("=" * 70)
+    print(f"  🌐 Server URL:        http://localhost:{port}")
+    print(f"  📚 API Docs:          http://localhost:{port}/docs")
+    print(f"  📋 OpenAPI Spec:      http://localhost:{port}/openapi.json")
+    print(f"  🔄 Auto-reload:       {'Enabled' if reload else 'Disabled'}")
+    print("=" * 70)
     print()
-    print("❌ Missing packages detected!")
-    print("Please run: pip install -r requirements.txt")
-    sys.exit(1)
-
-print()
-
-# Step 2: Initialize database
-print("Step 2: Initializing database...")
-try:
-    from database import Base, engine
-    import models  # Import models to register them
-
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
-    print("  ✅ Database tables created/verified")
-
-except Exception as e:
-    print(f"  ❌ Database initialization failed: {e}")
-    import traceback
-    traceback.print_exc()
-    print()
-    print("Try running: python init_database.py")
-    sys.exit(1)
-
-print()
-
-# Step 3: Start FastAPI
-print("Step 3: Starting FastAPI server...")
-print()
-print("Server will start at: http://localhost:8000")
-print("API Documentation: http://localhost:8000/docs")
-print()
-print("=" * 70)
-print()
-
-if __name__ == "__main__":
+    
+    # Start the server
     try:
-        import uvicorn
         uvicorn.run(
             "main:app",
-            host="0.0.0.0",
-            port=8000,
-            reload=True,
+            host=host,
+            port=port,
+            reload=reload,
             log_level="info"
         )
     except KeyboardInterrupt:
         print("\n\n👋 Server stopped by user")
     except Exception as e:
         print(f"\n❌ Server error: {e}")
-        import traceback
-        traceback.print_exc()
         sys.exit(1)
+
+if __name__ == "__main__":
+    main()
 

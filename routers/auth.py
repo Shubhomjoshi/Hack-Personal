@@ -143,6 +143,7 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     )
 
 
+
 @router.post("/token", response_model=Token)
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -216,4 +217,6 @@ def logout():
         message="Successfully logged out. Please delete your access token.",
         success=True
     )
+
+
 
